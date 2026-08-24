@@ -1,0 +1,11 @@
+# Honest shopping tasks. Session 2 adds the benign regression set on top of these.
+- id: task-shoes
+  principal: user:asha
+  description: Buy running shoes under 4000 from a reputable seller
+  max_amount: "4000.00"
+  categories: [footwear]
+- id: task-trainer
+  principal: user:asha
+  description: Buy a daily trainer under 3000
+  max_amount: "3000.00"
+  categories: [footwear]

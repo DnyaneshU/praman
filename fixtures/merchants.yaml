@@ -1,0 +1,26 @@
+# Merchants in the range. `reputation` and `age_days` feed Tier 2 features.
+# `signed_listings: false` is the M-12 / catalog-poisoning surface.
+- id: merchant_0031
+  name: Stride Athletics
+  vpa: merchant_0031@bank
+  reputation: 0.94
+  age_days: 1840
+  signed_listings: true
+- id: merchant_0044
+  name: Kadam Footwear
+  vpa: merchant_0044@bank
+  reputation: 0.88
+  age_days: 970
+  signed_listings: true
+- id: merchant_0102
+  name: Bharat General Store
+  vpa: merchant_0102@bank
+  reputation: 0.71
+  age_days: 210
+  signed_listings: false
+- id: merchant_0777
+  name: Value Sports Direct
+  vpa: merchant_0777@bank
+  reputation: 0.42
+  age_days: 11
+  signed_listings: false

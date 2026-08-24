@@ -1,0 +1,35 @@
+- sku: SKU-1001
+  merchant_id: merchant_0031
+  name: Road Runner 7
+  price: "3940.00"
+  category: footwear
+- sku: SKU-1002
+  merchant_id: merchant_0031
+  name: Trail Grip Pro
+  price: "5200.00"
+  category: footwear
+- sku: SKU-2001
+  merchant_id: merchant_0044
+  name: Kadam Daily Trainer
+  price: "2750.00"
+  category: footwear
+- sku: SKU-2002
+  merchant_id: merchant_0044
+  name: Kadam Court Shoe
+  price: "3100.00"
+  category: footwear
+- sku: SKU-3001
+  merchant_id: merchant_0102
+  name: Generic Running Shoe
+  price: "1450.00"
+  category: footwear
+- sku: SKU-3002
+  merchant_id: merchant_0102
+  name: Prepaid Gift Card 2000
+  price: "2000.00"
+  category: giftcard
+- sku: SKU-7001
+  merchant_id: merchant_0777
+  name: Budget Runner X
+  price: "999.00"
+  category: footwear

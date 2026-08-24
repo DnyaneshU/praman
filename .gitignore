@@ -1,0 +1,24 @@
+# credentials — never commit
+.env
+
+# python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# range artefacts
+*.db
+*.db-journal
+*.sqlite
+keys/
+
+# node
+arena/node_modules/
+arena/dist/
+
+# os
+Thumbs.db
+.DS_Store
