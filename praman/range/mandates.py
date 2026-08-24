@@ -96,14 +96,8 @@ class CartMandate(_Mandate):
     def visible_total(self) -> Decimal:
         return sum((i.subtotal() for i in self.items if i.visible), Decimal(0))
 
-    def actual_total(self) -> Decimal:
-        return sum((i.subtotal() for i in self.items), Decimal(0))
-
     def has_hidden_items(self) -> bool:
         return any(not i.visible for i in self.items)
-
-    def categories(self) -> set[str]:
-        return {i.category for i in self.items}
 
 
 class PaymentMandate(_Mandate):
@@ -120,6 +114,3 @@ class MandateChain(BaseModel):
     intent: IntentMandate
     cart: CartMandate
     payment: PaymentMandate
-
-    def describe(self) -> str:
-        return f"{self.intent.mandate_id} -> {self.cart.mandate_id} -> {self.payment.mandate_id}"

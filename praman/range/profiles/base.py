@@ -9,7 +9,7 @@ with one flag rather than a second codebase.
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from datetime import UTC, datetime, timedelta
 
 from praman.range.catalog import Task
@@ -36,9 +36,21 @@ class RailProfile(ABC):
     #: Seconds a mandate stays valid on this rail.
     ttl_seconds: int = 1800
 
-    @abstractmethod
     def build_intent(self, task: Task) -> IntentMandate:
-        """Turn a shopping task into the rail's intent mandate."""
+        """Turn a shopping task into this rail's intent mandate.
+
+        The default is the common shape. Rails with extra scope fields — UAP's
+        delegate ceiling, for one — override and extend it.
+        """
+        return IntentMandate(
+            mandate_id=new_id("int"),
+            principal=task.principal,
+            description=task.description,
+            max_amount=task.max_amount,
+            allowed_categories=list(task.categories),
+            expires_at=self.expiry(),
+            nonce=new_nonce(),
+        )
 
     def expiry(self, now: datetime | None = None) -> datetime:
         return (now or datetime.now(UTC)) + timedelta(seconds=self.ttl_seconds)
@@ -57,15 +69,3 @@ def get_profile(name: str) -> RailProfile:
         known = ", ".join(sorted(PROFILES)) or "none registered"
         raise KeyError(f"unknown rail profile {name!r}; known: {known}")
     return PROFILES[name]()
-
-
-def _new_intent(task: Task, expires_at: datetime) -> IntentMandate:
-    return IntentMandate(
-        mandate_id=new_id("int"),
-        principal=task.principal,
-        description=task.description,
-        max_amount=task.max_amount,
-        allowed_categories=list(task.categories),
-        expires_at=expires_at,
-        nonce=new_nonce(),
-    )

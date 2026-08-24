@@ -46,13 +46,6 @@ class Keyring:
     def generate(self, holder: str) -> None:
         self._private[holder] = ec.generate_private_key(CURVE)
 
-    def ensure(self, holder: str) -> None:
-        if holder not in self._private:
-            self.generate(holder)
-
-    def holders(self) -> list[str]:
-        return sorted(self._private)
-
     def sign(self, mandate: BaseModel, holder: str) -> str:
         if holder not in self._private:
             raise KeyError(f"no key for holder {holder!r}")

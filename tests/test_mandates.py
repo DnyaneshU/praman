@@ -127,3 +127,20 @@ def test_json_roundtrip_preserves_decimal():
     restored = MandateChain.model_validate_json(chain.model_dump_json())
     assert restored.payment.amount == chain.payment.amount
     assert isinstance(restored.payment.amount, Decimal)
+
+
+def test_float_price_is_rejected_not_coerced():
+    """Pydantic would happily coerce 3940.50 to Decimal. The guard stops it.
+
+    A float that reaches a mandate is a float that reaches the ledger, and the
+    harm figure stops being exact.
+    """
+    with pytest.raises(ValidationError):
+        LineItem(sku="x", name="n", price=3940.50, qty=1)
+
+
+def test_float_amount_is_rejected_on_every_mandate():
+    with pytest.raises(ValidationError):
+        make_intent(max_amount=4000.0)
+    with pytest.raises(ValidationError):
+        make_payment(amount=3940.5)

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
 
-__all__ = ["rupees", "paise", "fmt", "PAISE_PER_RUPEE"]
+__all__ = ["rupees", "fmt", "PAISE_PER_RUPEE"]
 
 PAISE_PER_RUPEE = Decimal(100)
 
@@ -46,18 +46,6 @@ def rupees(amount: str | int | Decimal) -> Decimal:
         raise ValueError(f"money is precise to paise only, got {amount!r}")
 
     return (value * PAISE_PER_RUPEE).quantize(Decimal(1))
-
-
-def paise(value: int | Decimal) -> Decimal:
-    """Wrap an amount already expressed in paise."""
-    if isinstance(value, float):
-        raise TypeError("float is not accepted for money")
-    result = Decimal(value)
-    if result != result.to_integral_value():
-        raise ValueError(f"paise must be a whole number, got {value!r}")
-    if result < 0:
-        raise ValueError(f"money must not be negative, got {value!r}")
-    return result.quantize(Decimal(1))
 
 
 def _group_indian(digits: str) -> str:

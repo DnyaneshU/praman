@@ -158,14 +158,6 @@ class Ledger:
             conn.execute("ROLLBACK")
             raise
 
-    def is_nonce_consumed(self, nonce: str) -> bool:
-        row = (
-            self._connect()
-            .execute("SELECT 1 FROM redemptions WHERE nonce = ?", (nonce,))
-            .fetchone()
-        )
-        return row is not None
-
     # -- settlement ----------------------------------------------------------
 
     def settle(self, payment: PaymentMandate, source: str) -> SettlementResult:

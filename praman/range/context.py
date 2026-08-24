@@ -8,7 +8,7 @@ judges who have to take them on trust.
 from __future__ import annotations
 
 import random
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
 
@@ -35,7 +35,6 @@ class RangeContext:
     seed: int
     principal: str = "user:asha"
     attacker_vpa: str = ATTACKER_VPA
-    fixtures: Path = field(default=FIXTURES_DIR)
 
     @classmethod
     def build(
@@ -66,7 +65,6 @@ class RangeContext:
             rng=random.Random(seed),
             seed=seed,
             principal=principal,
-            fixtures=Path(fixtures),
         )
 
     # -- signing ------------------------------------------------------------
