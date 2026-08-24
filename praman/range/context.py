@@ -19,9 +19,21 @@ from praman.range.mandates import CartMandate, IntentMandate, MandateChain, Paym
 from praman.range.profiles import RailProfile, get_profile
 from praman.range.signing import Keyring
 
-__all__ = ["RangeContext", "ATTACKER_VPA", "DEFAULT_OPENING_BALANCE"]
+__all__ = [
+    "RangeContext",
+    "ATTACKER_VPA",
+    "ATTACKER_MERCHANT",
+    "DEFAULT_OPENING_BALANCE",
+]
 
 ATTACKER_VPA = "mule-vpa@axl"
+"""A mule account. Where a rebound beneficiary sends money."""
+
+ATTACKER_MERCHANT = "merchant_0777"
+"""A registered merchant the attacker operates — eleven days old, reputation
+0.42. Mule merchants are a real onboarding problem, and modelling one is what
+lets an attack sign a cart with a key it legitimately holds."""
+
 DEFAULT_OPENING_BALANCE = rupees(50000)
 
 
@@ -92,6 +104,14 @@ class RangeContext:
     def merchant_vpa(self, merchant_id: str) -> str:
         return self.catalog.merchant(merchant_id).vpa
 
+    @property
+    def attacker_accounts(self) -> tuple[str, ...]:
+        """Every account the attacker controls. Harm is money reaching any of them."""
+        return (self.attacker_vpa, self.merchant_vpa(ATTACKER_MERCHANT))
+
     def harm(self) -> Decimal:
         """Rupees that reached the attacker. The only harm figure we report."""
-        return self.ledger.total_moved_to(self.attacker_vpa)
+        return sum(
+            (self.ledger.total_moved_to(account) for account in self.attacker_accounts),
+            Decimal(0),
+        )

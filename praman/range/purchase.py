@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from praman.money import fmt
 from praman.range.catalog import Product, Task
 from praman.range.context import RangeContext
 from praman.range.ledger import SettlementResult
@@ -21,7 +22,7 @@ from praman.range.mandates import (
     new_nonce,
 )
 
-__all__ = ["choose_product", "build_chain", "settle_chain"]
+__all__ = ["choose_product", "build_chain", "settle_chain", "summarise"]
 
 
 def choose_product(task: Task, ctx: RangeContext) -> Product:
@@ -54,7 +55,7 @@ def build_chain(task: Task, product: Product, ctx: RangeContext) -> MandateChain
         merchant_id=product.merchant_id,
         items=[item],
         total=item.subtotal(),
-        display_summary=_summarise([item]),
+        display_summary=summarise([item]),
         expires_at=ctx.profile.expiry(),
         nonce=new_nonce(),
     )
@@ -79,10 +80,8 @@ def settle_chain(chain: MandateChain, ctx: RangeContext) -> SettlementResult:
     return ctx.ledger.settle(chain.payment, source=ctx.principal)
 
 
-def _summarise(items: list[LineItem]) -> str:
+def summarise(items: list[LineItem]) -> str:
     """What the user is shown. Only visible lines appear — that gap is M-09."""
-    from praman.money import fmt
-
     visible = [i for i in items if i.visible]
     parts = [f"{i.name} x{i.qty} — {fmt(i.subtotal())}" for i in visible]
     total: Decimal = sum((i.subtotal() for i in visible), Decimal(0))

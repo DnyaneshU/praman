@@ -16,6 +16,7 @@ from praman.console import setup as console_setup
 
 COMMANDS = {
     "demo": "An honest purchase, settled end to end",
+    "campaign": "Run a campaign and write episodes to JSONL",
     "test": "Run the test suite",
     "lint": "Ruff check and format check",
 }
@@ -46,6 +47,11 @@ def main(argv: list[str] | None = None) -> int:
         from praman.range.demo import main as demo_main
 
         return demo_main(rest)
+
+    if args.command == "campaign":
+        from praman.red.runner import main as campaign_main
+
+        return campaign_main(rest)
 
     if args.command == "test":
         return subprocess.call([sys.executable, "-m", "pytest", *rest])

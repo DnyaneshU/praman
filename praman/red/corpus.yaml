@@ -1,0 +1,149 @@
+# The seed corpus — fourteen documented attack techniques.
+#
+# These are STARTING POINTS, not the inventory. The inventory is whatever the
+# mutator finds by searching outward from them. A catalogue of known attacks is
+# a checklist, and checklists already exist; the search is the product.
+#
+# `implemented: false` means exactly that — documented here, not built, not
+# measured, and never reported as a result. Saying so is what makes the numbers
+# we do report believable. tests/test_corpus.py fails the build if this file
+# and the attack registry ever disagree.
+#
+# root_cause references the published taxonomy in arXiv 2607.21824 (RC-1..RC-6).
+
+- id: S-01
+  name: Cart substitution after intent
+  class: structural
+  root_cause: RC-2
+  implemented: true
+  mechanism: >
+    Intent signed for item A; cart presented for item B under the price
+    ceiling. Every signature still verifies.
+  caught_by: inv-01
+
+- id: S-02
+  name: Beneficiary rebinding
+  class: structural
+  root_cause: RC-2
+  implemented: true
+  mechanism: >
+    Destination swapped between cart approval and settlement. Nothing binds
+    the payment to the merchant that issued the cart.
+  caught_by: inv-02
+
+- id: S-03
+  name: Token-redemption race
+  class: structural
+  root_cause: RC-4
+  implemented: true
+  mechanism: >
+    Non-atomic check-then-deduct; one mandate redeemed several times
+    concurrently. No field is tampered with — every invariant but inv-04 passes.
+  caught_by: inv-04
+
+- id: S-04
+  name: Mandate replay across domains
+  class: structural
+  root_cause: RC-5
+  implemented: true
+  mechanism: >
+    A spent intent authorises a second purchase at a different merchant.
+    Named by the AP2 red-team authors as uncovered by existing work.
+  caught_by: inv-04
+
+- id: S-05
+  name: Scope escalation past delegate limit
+  class: structural
+  root_cause: RC-5
+  implemented: false
+  mechanism: >
+    Authentication valid, authorisation scope unenforced; cumulative spend
+    exceeds the delegated cap.
+  caught_by: inv-08
+
+- id: S-06
+  name: Nonce reuse / TTL bypass
+  class: structural
+  root_cause: RC-3
+  implemented: false
+  mechanism: Expired or consumed mandate accepted; freshness never checked.
+  caught_by: inv-07
+
+- id: S-07
+  name: Credential leak via observable channel
+  class: structural
+  root_cause: RC-3
+  implemented: false
+  mechanism: Mandate identifiers exposed in URLs, logs or redirects, then reused.
+  caught_by: inv-04
+
+- id: M-08
+  name: Branded whisper
+  class: semantic
+  root_cause: RC-6
+  implemented: false
+  mechanism: >
+    Hidden instructions in product metadata force the injected item to rank
+    first. 100% success in the published study.
+  caught_by: inv-01
+
+- id: M-09
+  name: Invisible line-item injection
+  class: semantic
+  root_cause: RC-6
+  implemented: false
+  mechanism: >
+    A gift-card or fee line is appended to the cart and concealed from the
+    summary shown to the user.
+  caught_by: inv-06
+
+- id: M-10
+  name: Prompt-playback mismatch
+  class: semantic
+  root_cause: RC-6
+  implemented: false
+  mechanism: Agent shows one natural-language summary and signs a materially different mandate.
+  caught_by: tier-3
+
+- id: M-11
+  name: Refund-path hijack
+  class: semantic
+  root_cause: RC-6
+  implemented: false
+  mechanism: >
+    Concealed commands push past return verification; attacks the
+    under-instrumented money-out path.
+  caught_by: tier-3
+
+- id: M-12
+  name: Registry / catalog poisoning
+  class: semantic
+  root_cause: RC-1
+  implemented: false
+  mechanism: Unsigned marketplace content accepted as truth about merchants and prices.
+  caught_by: tier-2
+
+- id: I-13
+  name: Collect-request inversion
+  class: india
+  root_cause: RC-5
+  implemented: false
+  mechanism: >
+    The agent is manoeuvred into approving a pull rather than issuing a push —
+    the agentic form of the scam behind 18 lakh reports in Q1 2026.
+  caught_by: inv-02
+
+- id: I-14
+  name: Coerced-principal intent
+  class: india
+  root_cause: L3-L4
+  implemented: false
+  mechanism: >
+    The mandate is authentic but the human was under digital-arrest coercion.
+    Every cryptographic check passes and the money is still gone, because the
+    fraud is upstream of the mandate.
+  caught_by: none
+  note: >
+    Deliberately unbuildable at the mandate layer. It marks the honest limit of
+    the entire cryptographic approach the industry is currently betting on, and
+    naming that limit is a strength rather than an admission.

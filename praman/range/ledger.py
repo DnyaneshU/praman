@@ -22,7 +22,6 @@ single atomic `UPDATE`.
 
 from __future__ import annotations
 
-import contextlib
 import sqlite3
 import threading
 from datetime import UTC, datetime
@@ -83,7 +82,12 @@ class Ledger:
     def _connect(self) -> sqlite3.Connection:
         conn = getattr(self._local, "conn", None)
         if conn is None:
-            conn = sqlite3.connect(self.path, timeout=30.0, isolation_level=None)
+            # check_same_thread=False so close() can reclaim a worker thread's
+            # connection from the main thread. Each connection is still *used*
+            # by exactly one thread — only teardown crosses the boundary.
+            conn = sqlite3.connect(
+                self.path, timeout=30.0, isolation_level=None, check_same_thread=False
+            )
             conn.row_factory = sqlite3.Row
             conn.execute("PRAGMA journal_mode=WAL")
             conn.execute("PRAGMA busy_timeout=30000")
@@ -99,13 +103,15 @@ class Ledger:
         Windows will not delete a file that still has an open handle, so a
         ledger left open makes temp-directory cleanup fail. Closing only the
         calling thread's connection is not enough after a concurrency test.
+
+        Failures are not swallowed: a connection that will not close is a
+        resource leak, and hiding it here cost an afternoon once already.
         """
         with self._registry_lock:
-            for conn in self._registry:
-                with contextlib.suppress(sqlite3.Error):
-                    conn.close()
-            self._registry.clear()
+            connections, self._registry = self._registry, []
         self._local = threading.local()
+        for conn in connections:
+            conn.close()
 
     def __enter__(self) -> Ledger:
         return self
