@@ -1,0 +1,71 @@
+name: deploy to hugging face
+
+# The arena is deployed as the container this repo builds, unmodified. Hugging
+# Face runs a Dockerfile as-is, as UID 1000, with no credential and no card —
+# which is the whole reason it was chosen: the deployed thing is the tested
+# thing, not a variant of it.
+#
+# Runs after CI, and only if CI passed. A red suite that deploys anyway is a
+# public URL that disagrees with its own badge.
+
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  SPACE: DnyaneshU/praman
+
+jobs:
+  deploy:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history: the Space is a git repo, and the work is worth seeing.
+          fetch-depth: 0
+          ref: main
+
+      # Spaces are configured by YAML front matter in their README. Generating
+      # it here rather than committing it keeps GitHub's front page clean —
+      # GitHub renders front matter as a stray table above the title.
+      - name: give the space its front matter
+        run: |
+          {
+            echo '---'
+            echo 'title: Praman Arena'
+            echo 'emoji: 🛡️'
+            echo 'colorFrom: red'
+            echo 'colorTo: indigo'
+            echo 'sdk: docker'
+            echo 'app_port: 8000'
+            echo 'pinned: false'
+            echo 'short_description: Breach and attack simulation for agentic payment mandates'
+            echo '---'
+            echo
+            cat README.md
+          } > README.space.md
+          mv README.space.md README.md
+
+      - name: push to the space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          if [ -z "$HF_TOKEN" ]; then
+            echo "::error::HF_TOKEN is not set — add it under Settings → Secrets → Actions"
+            exit 1
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "deploy ${GITHUB_SHA::7}"
+          # Force, because the Space's history is this workflow's output rather
+          # than a branch anyone commits to.
+          git push --force "https://oauth2:${HF_TOKEN}@huggingface.co/spaces/${SPACE}" HEAD:main
+          echo "::notice::deployed to https://huggingface.co/spaces/${SPACE}"

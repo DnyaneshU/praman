@@ -1,6 +1,7 @@
 # प्रमाण Praman
 
 [![ci](https://github.com/DnyaneshU/praman/actions/workflows/ci.yml/badge.svg)](https://github.com/DnyaneshU/praman/actions/workflows/ci.yml)
+[![arena](https://img.shields.io/badge/arena-live-6E8BE0)](https://huggingface.co/spaces/DnyaneshU/praman)
 
 **Breach and attack simulation for agentic payment mandates.**
 
