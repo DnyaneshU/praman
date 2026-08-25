@@ -19,6 +19,7 @@ COMMANDS = {
     "campaign": "Run a single-round campaign, baseline beside defended",
     "adapt": "Run the adaptive campaign — the static vs adaptive gap",
     "train": "Fit Tier 2 on Red's survivors and report what it learned",
+    "matrix": "Generate every campaign the arena can show",
     "serve": "Start the arena at http://127.0.0.1:8000",
     "test": "Run the test suite",
     "lint": "Ruff check and format check",
@@ -65,6 +66,11 @@ def main(argv: list[str] | None = None) -> int:
         from praman.blue.train_cli import main as train_main
 
         return train_main(rest)
+
+    if args.command == "matrix":
+        from praman.red.matrix import main as matrix_main
+
+        return matrix_main(rest)
 
     if args.command == "serve":
         from praman.api.serve import main as serve_main

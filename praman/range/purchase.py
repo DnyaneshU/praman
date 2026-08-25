@@ -10,11 +10,12 @@ from __future__ import annotations
 from decimal import Decimal
 
 from praman.money import fmt
-from praman.range.catalog import Product, Task
+from praman.range.catalog import Product
 from praman.range.context import RangeContext
 from praman.range.ledger import SettlementResult
 from praman.range.mandates import (
     CartMandate,
+    IntentMandate,
     LineItem,
     MandateChain,
     PaymentMandate,
@@ -25,23 +26,27 @@ from praman.range.mandates import (
 __all__ = ["choose_product", "build_chain", "settle_chain", "summarise"]
 
 
-def choose_product(task: Task, ctx: RangeContext) -> Product:
-    """Pick the top-ranked product the task can afford.
+def choose_product(intent: IntentMandate, ctx: RangeContext) -> Product:
+    """Pick the top-ranked product the *intent* can afford.
 
-    Ranking comes from the catalog (reputation, then price). M-08 attacks this
+    Deliberately the intent's ceiling, not the task's. Under a delegated rail
+    the agent is granted less than its principal holds, and an agent that
+    shopped to the human's budget would build carts its own authority cannot
+    cover — every one of which the control would then refuse as a false
+    positive. The grant is the budget.
+
+    Ranking comes from the catalog (reputation, then price). M-08 attacks that
     ordering rather than the choice itself.
     """
-    for category in task.categories:
-        matches = ctx.catalog.search(category, task.max_amount)
+    for category in intent.allowed_categories:
+        matches = ctx.catalog.search(category, intent.max_amount)
         if matches:
             return matches[0]
-    raise LookupError(f"nothing in {task.categories} under {task.max_amount}")
+    raise LookupError(f"nothing in {intent.allowed_categories} under {intent.max_amount}")
 
 
-def build_chain(task: Task, product: Product, ctx: RangeContext) -> MandateChain:
+def build_chain(intent: IntentMandate, product: Product, ctx: RangeContext) -> MandateChain:
     """Assemble a signed, honest Intent -> Cart -> Payment chain."""
-    intent = ctx.profile.build_intent(task)
-
     item = LineItem(
         sku=product.sku,
         name=product.name,

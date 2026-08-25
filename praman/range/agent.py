@@ -22,7 +22,7 @@ from typing import Protocol, runtime_checkable
 
 from praman.range.catalog import Product, Task
 from praman.range.context import RangeContext
-from praman.range.mandates import MandateChain
+from praman.range.mandates import IntentMandate, MandateChain
 from praman.range.purchase import build_chain, choose_product
 
 __all__ = ["VictimAgent", "ScriptedAgent"]
@@ -58,14 +58,18 @@ class ScriptedAgent:
         return "scripted-susceptible" if self.susceptible else "scripted"
 
     def shop(self, task: Task, ctx: RangeContext) -> MandateChain:
-        return build_chain(task, self._select(task, ctx), ctx)
+        # The intent comes first: it carries the rail's grant, and everything
+        # downstream — what the agent can afford, what the control checks —
+        # follows from it rather than from the human's own budget.
+        intent = ctx.profile.build_intent(task)
+        return build_chain(intent, self._select(intent, ctx), ctx)
 
-    def _select(self, task: Task, ctx: RangeContext) -> Product:
+    def _select(self, intent: IntentMandate, ctx: RangeContext) -> Product:
         if self.susceptible:
             injected = self._injected(ctx)
             if injected is not None:
                 return injected
-        return choose_product(task, ctx)
+        return choose_product(intent, ctx)
 
     @staticmethod
     def _injected(ctx: RangeContext) -> Product | None:

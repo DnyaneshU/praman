@@ -69,6 +69,10 @@ class Episode(BaseModel):
     """Which mutation strategy produced this variant, if any."""
 
     rail_profile: str
+    defense_tiers: list[int] = Field(default_factory=list)
+    """Which tiers judged this episode. A result is meaningless without it —
+    "ASR 16.7%" says nothing until you know what was standing in the way."""
+
     victim_model: str = "scripted"
     seed: int
 

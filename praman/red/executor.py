@@ -94,6 +94,7 @@ def run_episode(
                 lineage=lineage or [],
                 strategy=strategy,
                 rail_profile=ctx.profile.name,
+                defense_tiers=list(defense.tiers) if defense else [],
                 victim_model=agent.model_name,
                 seed=seed,
                 outcome="block" if prevented else "allow",

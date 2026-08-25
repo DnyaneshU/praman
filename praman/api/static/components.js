@@ -334,3 +334,67 @@ export const AsrCurve = {
     </section>
   `,
 };
+
+export const Controls = {
+  /* Rail, control and round, as facets over the committed campaign set.
+   *
+   * The arena replays results rather than re-running them, so a switch on the
+   * page is only honest if a campaign was actually run for that combination.
+   * `python -m praman matrix` generates the full grid, and these controls are
+   * a view onto what exists: a combination with no campaign behind it is shown
+   * disabled rather than silently doing nothing.
+   */
+  props: { campaigns: Array, rail: String, tiersKey: String, round: { default: null }, rounds: Array },
+  emits: ["update:rail", "update:tiersKey", "update:round"],
+  setup(props) {
+    const rails = computed(() => [...new Set(props.campaigns.map((c) => c.rail))].sort());
+
+    const controls = computed(() => {
+      const seen = new Map();
+      for (const c of props.campaigns) {
+        const key = (c.tiers ?? []).join(",");
+        if (!seen.has(key)) seen.set(key, { key, label: c.label, adaptive: c.adaptive });
+      }
+      return [...seen.values()].sort((a, b) => a.key.length - b.key.length);
+    });
+
+    const available = (rail, key) =>
+      props.campaigns.some((c) => c.rail === rail && (c.tiers ?? []).join(",") === key);
+
+    return { rails, controls, available };
+  },
+  template: `
+    <section class="facets">
+      <div class="facet">
+        <span class="label">rail</span>
+        <div class="segments">
+          <button v-for="r in rails" :key="r"
+                  :aria-pressed="r === rail"
+                  @click="$emit('update:rail', r)">{{ r }}</button>
+        </div>
+      </div>
+
+      <div class="facet">
+        <span class="label">control</span>
+        <div class="segments">
+          <button v-for="c in controls" :key="c.key"
+                  :aria-pressed="c.key === tiersKey"
+                  :disabled="!available(rail, c.key)"
+                  @click="$emit('update:tiersKey', c.key)">{{ c.label }}</button>
+        </div>
+      </div>
+
+      <div class="facet" v-if="rounds.length > 1">
+        <span class="label">round</span>
+        <div class="segments">
+          <button :aria-pressed="round === null" @click="$emit('update:round', null)">all</button>
+          <button v-for="r in rounds" :key="r"
+                  :aria-pressed="round === r"
+                  @click="$emit('update:round', r)">{{ r }}</button>
+        </div>
+      </div>
+
+      <span class="note" v-if="round !== null">showing round {{ round }} only</span>
+    </section>
+  `,
+};

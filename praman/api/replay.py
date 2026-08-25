@@ -12,6 +12,7 @@ judge re-running the campaign locally gets the same numbers back.
 from __future__ import annotations
 
 import asyncio
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -22,8 +23,17 @@ from praman.red.episode import Episode, read_jsonl
 
 __all__ = ["CampaignStore", "CampaignRecord", "stream_episodes"]
 
+logger = logging.getLogger(__name__)
+
 EPISODE_DELAY = 0.45
 ROUND_DELAY = 1.2
+
+
+def _label(tiers: list[int]) -> str:
+    """How a control configuration reads in the arena's picker."""
+    if not tiers:
+        return "undefended"
+    return "Tier " + "+".join(str(t) for t in tiers)
 
 
 @dataclass(frozen=True)
@@ -34,11 +44,15 @@ class CampaignRecord:
 
     def describe(self) -> dict:
         rounds = sorted({e.round for e in self.episodes})
+        first = self.episodes[0]
         return {
             "id": self.id,
             "episodes": len(self.episodes),
             "rounds": len(rounds),
             "adaptive": len(rounds) > 1,
+            "rail": first.rail_profile,
+            "tiers": first.defense_tiers,
+            "label": _label(first.defense_tiers),
             "asr": metrics.asr(self.episodes),
             "moved": str(metrics.rupees_moved(self.episodes)),
         }
@@ -68,9 +82,17 @@ class CampaignStore:
 
     @staticmethod
     def _load(path: Path) -> CampaignRecord | None:
+        """Read one campaign file, complaining loudly if it will not parse.
+
+        Swallowing the error silently makes an unreadable campaign vanish from
+        the picker with no signal at all — which is exactly what happened when
+        a new Episode field met results written by an older build. A campaign
+        that cannot be read is a broken deployment, not an empty list.
+        """
         try:
             episodes = read_jsonl(path)
-        except (ValueError, OSError):
+        except (ValueError, OSError) as exc:
+            logger.warning("skipping unreadable campaign %s: %s", path.name, exc)
             return None
         return CampaignRecord(id=path.stem, path=path, episodes=episodes) if episodes else None
 

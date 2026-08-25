@@ -22,14 +22,18 @@ class RailProfile(ABC):
     name: str
     description: str
 
-    #: Invariant ids Tier 1 enforces on this rail. Session 3 implements them.
+    #: Invariant ids Tier 1 enforces on this rail.
+    #:
+    #: Every id here is implemented in praman/blue/invariants.py. Listing a
+    #: check nothing runs would be the same failure test_corpus.py exists to
+    #: prevent, one layer down.
     invariants: tuple[str, ...] = (
         "inv-01",  # cart stays inside the intent's constraints
         "inv-02",  # payment beneficiary is the merchant that issued the cart
         "inv-03",  # total under the ceiling
         "inv-04",  # nonce fresh and unconsumed
         "inv-05",  # every signature in the chain verifies
-        "inv-06",  # nothing hidden from the user-facing summary
+        "inv-06",  # the total shown to the user equals the total charged
         "inv-07",  # nothing expired
     )
 

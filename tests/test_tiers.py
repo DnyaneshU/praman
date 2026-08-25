@@ -18,11 +18,13 @@ from praman.blue.features import FEATURE_NAMES, extract
 from praman.blue.invariants import INVARIANTS
 from praman.blue.training import gather_training_set
 from praman.range.agent import ScriptedAgent
+from praman.range.catalog import Catalog
 from praman.range.context import RangeContext
 from praman.range.profiles import PROFILES, get_profile
 from praman.red.campaign import run_adaptive_campaign
 from praman.red.executor import run_episode
 from praman.red.mutator.base import Variant
+from praman.red.runner import run_campaign
 
 TASKS = ("task-shoes", "task-trainer", "task-budget", "task-premium")
 
@@ -176,11 +178,36 @@ def test_inv06_now_checks_the_stated_total_not_a_flag():
 # -- rail profiles ----------------------------------------------------------
 
 
-def test_uap_profile_is_registered_with_a_tighter_grant():
+def test_uap_delegates_less_than_the_principal_holds():
+    """The delegate cap is what makes UAP a different rail, not a relabel.
+
+    A lower ceiling changes what the agent can afford, which changes which
+    merchant it buys from, which changes the campaign. Without it the two
+    profiles produce identical numbers under different headings.
+    """
     assert "uap" in PROFILES
     uap, autopay = get_profile("uap"), get_profile("autopay")
     assert uap.ttl_seconds < autopay.ttl_seconds
-    assert "inv-08" in uap.invariants
+
+    task = Catalog.load().task("task-shoes")
+    assert uap.build_intent(task).max_amount == uap.delegate_cap
+    assert autopay.build_intent(task).max_amount == task.max_amount
+    assert uap.delegate_cap < task.max_amount
+
+
+def test_every_declared_invariant_is_actually_implemented():
+    """Listing a check nothing runs is the failure test_corpus.py guards against."""
+    implemented = {i.id for i in INVARIANTS}
+    for name in PROFILES:
+        assert set(get_profile(name).invariants) <= implemented, name
+
+
+def test_the_two_rails_produce_different_campaigns():
+    """If the rail switch changes nothing observable, it is a slide, not a feature."""
+    runs = {
+        rail: run_campaign(repeats=1, profile=rail, defense=None) for rail in ("autopay", "uap")
+    }
+    assert metrics.rupees_moved(runs["autopay"]) != metrics.rupees_moved(runs["uap"])
 
 
 @pytest.mark.parametrize("profile", ["autopay", "uap"])

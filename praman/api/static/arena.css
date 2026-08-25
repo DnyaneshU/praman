@@ -282,3 +282,42 @@ select {
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
+
+/* -- facet controls ------------------------------------------------------ */
+
+.facets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: center;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--surface);
+}
+
+.facet { display: flex; align-items: center; gap: 8px; }
+.facet > .label {
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.segments { display: flex; border: 1px solid var(--rule-strong); }
+.segments button {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-2);
+  background: transparent;
+  border: 0;
+  border-right: 1px solid var(--rule-strong);
+  padding: 5px 11px;
+  cursor: pointer;
+}
+.segments button:last-child { border-right: 0; }
+.segments button:hover:not(:disabled) { background: var(--surface-2); color: var(--ink); }
+.segments button[aria-pressed="true"] { background: var(--def); color: var(--ground); }
+.segments button:disabled { color: var(--rule-strong); cursor: not-allowed; }
+.segments button:focus-visible { outline: 2px solid var(--def); outline-offset: -2px; }
+
+.facet .note { color: var(--ink-3); font-size: 11px; }

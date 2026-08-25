@@ -104,6 +104,21 @@ def run_adaptive_campaign(
             if episode.succeeded and variant not in breakthroughs:
                 breakthroughs.append(variant)
 
+        # One honest purchase per round. A control can only be said to be
+        # holding if it is still letting real traffic through while it does so,
+        # and a campaign with no benign episodes cannot report that at all.
+        episodes.append(
+            run_episode(
+                episode_id=f"ep-{len(episodes):04d}",
+                attack=None,
+                task_id=task_id,
+                seed=seed + round_,
+                profile=profile,
+                defense=defense,
+                round_=round_,
+            )
+        )
+
         # A variant that already takes money has nothing left to learn; the
         # search spends its budget on the ones still being refused.
         blocked = [c for c in candidates if not c.succeeded]
