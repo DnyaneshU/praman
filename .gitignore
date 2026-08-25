@@ -18,6 +18,9 @@ dist/
 *.sqlite
 keys/
 
+# one-off campaign output. The committed matrix lives in results/ itself.
+results/scratch/
+
 # editor and tooling
 .vscode/
 .idea/

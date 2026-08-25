@@ -185,7 +185,11 @@ def main(argv: list[str] | None = None) -> int:
 
     episodes = baseline if defended is None else defended
     label = "baseline" if defended is None else f"tier{args.tiers.replace(',', '')}"
-    out = args.out or Path(f"results/{label}.jsonl")
+    # Under results/scratch/, which CampaignStore does not glob. A one-off run
+    # is not a committed result, and dropping it beside the matrix put an
+    # unnamed tenth campaign in the arena's sidebar that duplicated one already
+    # there. Same reasoning as results/studies/.
+    out = args.out or Path(f"results/scratch/{label}.jsonl")
     write_jsonl(episodes, out)
     print(f"  wrote {len(episodes)} episodes to {out}\n")
 

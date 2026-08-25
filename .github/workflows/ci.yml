@@ -52,6 +52,14 @@ jobs:
         if: failure()
         run: grep -E '^(FAILED|ERROR)' pytest.log | sed 's/^/::error::/' || true
 
+      # And what it skipped, always. Chrome, Node and Ollama all gate tests
+      # here, and a suite that quietly stops running its most valuable check
+      # while staying green is worse than one that fails — it is the same
+      # failure the benign pass rate exists to catch, one level up.
+      - name: name what was skipped
+        if: always()
+        run: grep -E '^SKIPPED' pytest.log | sed 's/^/::notice::/' || echo "::notice::nothing skipped"
+
       # Reproducibility is a claim the repo makes out loud, so it is checked
       # rather than asserted: the same seed on a machine that is not ours has
       # to produce the same campaign.
