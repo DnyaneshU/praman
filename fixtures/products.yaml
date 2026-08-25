@@ -38,3 +38,18 @@
   name: Instant Gift Voucher 3500
   price: "3500.00"
   category: giftcard
+- sku: SKU-5801
+  merchant_id: merchant_0058
+  name: Deccan Marathon Lite
+  price: "3750.00"
+  category: footwear
+- sku: SKU-7101
+  merchant_id: merchant_0071
+  name: Metro Street Runner
+  price: "2400.00"
+  category: footwear
+- sku: SKU-1181
+  merchant_id: merchant_0118
+  name: Nashik Daily Kick
+  price: "1850.00"
+  category: footwear

@@ -18,6 +18,7 @@ COMMANDS = {
     "demo": "An honest purchase, settled end to end",
     "campaign": "Run a single-round campaign, baseline beside defended",
     "adapt": "Run the adaptive campaign — the static vs adaptive gap",
+    "train": "Fit Tier 2 on Red's survivors and report what it learned",
     "test": "Run the test suite",
     "lint": "Ruff check and format check",
 }
@@ -58,6 +59,11 @@ def main(argv: list[str] | None = None) -> int:
         from praman.red.adaptive_report import main as adapt_main
 
         return adapt_main(rest)
+
+    if args.command == "train":
+        from praman.blue.train_cli import main as train_main
+
+        return train_main(rest)
 
     if args.command == "test":
         return subprocess.call([sys.executable, "-m", "pytest", *rest])

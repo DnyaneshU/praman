@@ -13,7 +13,7 @@ uses.
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 __all__ = ["Verdict"]
 
@@ -34,6 +34,13 @@ class Verdict(BaseModel):
 
     score: float | None = None
     """Tier 2/3 only. Tier 1 is arithmetic and has no score."""
+    escalated: bool = False
+    """Held for human review rather than refused outright. Tier 3 only.
+
+    Kept distinct from a rule-based block because they are different claims: a
+    rule says the chain is invalid, an escalation says a person should look."""
+    features: dict[str, float] = Field(default_factory=dict)
+    """Behavioural features extracted for this chain, recorded on the episode."""
     latency_ms: float = 0.0
 
     @classmethod
@@ -56,6 +63,20 @@ class Verdict(BaseModel):
             allowed=False,
             tier=tier,
             invariant=invariant,
+            rule=rule,
+            observed=observed,
+            expected=expected,
+            **kw,
+        )
+
+    @classmethod
+    def escalate(cls, *, rule: str, observed: str, expected: str, tier: int = 3, **kw) -> Verdict:
+        """Hold for review. Not allowed, but not a rule violation either."""
+        return cls(
+            allowed=False,
+            escalated=True,
+            tier=tier,
+            invariant=f"tier-{tier}",
             rule=rule,
             observed=observed,
             expected=expected,

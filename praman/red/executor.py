@@ -77,6 +77,9 @@ def run_episode(
             moved = ctx.harm() - before
             blocked = [m for m in mediations if not m.allowed]
             evidence = blocked[0].verdict if blocked else None
+            # Features come from the last mediation: for a multi-chain plan it
+            # is the variant actually under test, not the honest preamble.
+            features = mediations[-1].verdict.features if mediations else {}
 
             # "block" means the control actually prevented harm, not merely
             # that it objected somewhere. S-04's plan settles an honest chain
@@ -96,6 +99,8 @@ def run_episode(
                 outcome="block" if prevented else "allow",
                 blocked_by_tier=evidence.tier if evidence else None,
                 violated_invariant=evidence.invariant if evidence else None,
+                escalated=bool(evidence and evidence.escalated),
+                features=features,
                 rupees_moved=moved,
                 beneficiary=chains[-1].payment.beneficiary if moved else None,
                 latency_ms={

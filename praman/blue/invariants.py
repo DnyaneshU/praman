@@ -22,11 +22,12 @@ telling us nothing about the control.
 
 from __future__ import annotations
 
+import re
 from abc import ABC, abstractmethod
 from decimal import Decimal
 
 from praman.blue.verdict import Verdict
-from praman.money import fmt
+from praman.money import fmt, rupees
 from praman.range.context import RangeContext
 from praman.range.mandates import MandateChain
 
@@ -153,26 +154,52 @@ class TotalUnderCeiling(Invariant):
         return Verdict.allow()
 
 
-class NoHiddenLineItems(Invariant):
+class SummaryMatchesCharge(Invariant):
     """What the user was shown must be what the user is charged.
 
     Catches M-09. The cart is arithmetically sound, inside the ceiling, in the
     right category, correctly signed — and it quietly bills for a second pair
     of shoes the summary never mentioned.
+
+    **Strengthened in response to the search.** The first version tested
+    `has_hidden_items()` — a *flag on each line*. `mut-unhide` beat it in one
+    round by setting every flag true and leaving the summary text untouched:
+    the proxy was satisfied while the concealment survived intact.
+
+    So this now checks the property itself. The summary states a total; that
+    total must equal what the chain actually charges. A flag is something the
+    attacker writes, and the rupee figure shown to the user is the thing that
+    matters.
     """
 
     id = "inv-06"
-    rule = "every charged line item must appear in the summary shown to the user"
+    rule = "the total shown to the user must equal the total charged"
+
+    _AMOUNT = re.compile(r"₹\s*([\d,]+(?:\.\d{2})?)")
 
     def check(self, chain: MandateChain, ctx: RangeContext) -> Verdict:
         cart = chain.cart
-        if cart.has_hidden_items():
-            hidden = fmt(cart.total - cart.visible_total())
+        shown = self._stated_total(cart.display_summary)
+
+        if shown is None:
             return self._block(
-                observed=f"{fmt(cart.visible_total())} shown, {fmt(cart.total)} charged",
-                expected=f"no concealed charge (found {hidden})",
+                observed="summary states no total",
+                expected=f"a stated total of {fmt(cart.total)}",
+            )
+        if shown != cart.total:
+            return self._block(
+                observed=f"{fmt(shown)} shown, {fmt(cart.total)} charged",
+                expected=f"concealed charge of {fmt(cart.total - shown)}",
             )
         return Verdict.allow()
+
+    @classmethod
+    def _stated_total(cls, summary: str) -> Decimal | None:
+        """The largest rupee figure in the summary — by construction, the total."""
+        found = cls._AMOUNT.findall(summary)
+        if not found:
+            return None
+        return max(rupees(value.replace(",", "")) for value in found)
 
 
 class BeneficiaryBindsCartIssuer(Invariant):
@@ -237,7 +264,7 @@ INVARIANTS: tuple[Invariant, ...] = (
     NotExpired(),
     CartWithinIntent(),
     TotalUnderCeiling(),
-    NoHiddenLineItems(),
+    SummaryMatchesCharge(),
     BeneficiaryBindsCartIssuer(),
     Freshness(),
 )

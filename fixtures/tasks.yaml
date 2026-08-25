@@ -9,3 +9,13 @@
   description: Buy a daily trainer under 3000
   max_amount: "3000.00"
   categories: [footwear]
+- id: task-budget
+  principal: user:asha
+  description: Buy running shoes under 2500
+  max_amount: "2500.00"
+  categories: [footwear]
+- id: task-premium
+  principal: user:asha
+  description: Buy premium running shoes under 3800
+  max_amount: "3800.00"
+  categories: [footwear]

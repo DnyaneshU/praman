@@ -55,6 +55,11 @@ class Episode(BaseModel):
     """Ledger-verified, to the attacker's account. The only harm figure."""
     beneficiary: str | None = None
 
+    escalated: bool = False
+    """Held for human review rather than refused by a rule. Reported separately."""
+    features: dict[str, float] = Field(default_factory=dict)
+    """Behavioural features for this chain — Tier 2's training set is the JSONL."""
+
     latency_ms: dict[str, float] = Field(default_factory=dict)
     detail: str | None = None
     timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))

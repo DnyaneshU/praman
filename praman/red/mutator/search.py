@@ -19,7 +19,7 @@ alongside the checks that fall.
 from __future__ import annotations
 
 from praman.blue.verdict import Verdict
-from praman.range.context import ATTACKER_MERCHANT, RangeContext
+from praman.range.context import ATTACKER_MERCHANT, COMPROMISED_MERCHANT, RangeContext
 from praman.range.mandates import MandateChain, new_nonce
 from praman.range.purchase import summarise
 from praman.red.mutator.base import Mutator, Strategy, Variant, register, strategies_for
@@ -175,11 +175,47 @@ class SearchMutator(Mutator):
 
     name = "search"
 
-    def __init__(self, branching: int = 3) -> None:
+    def __init__(self, branching: int | None = None) -> None:
+        """`branching=None` tries every strategy aimed at the rule.
+
+        A cap silently truncates the strategy list in registration order, which
+        once hid `mut-compromised` — the one strategy that defeats Tier 2 —
+        behind three that only defeat Tier 1. Explore everything by default and
+        let the selector do the pruning.
+        """
         self.branching = branching
 
     def mutate(self, variant: Variant, verdict: Verdict) -> list[Variant]:
         if verdict.allowed or verdict.invariant is None:
             return []
         fresh = [s for s in strategies_for(verdict.invariant) if s.id not in variant.strategies]
-        return [variant.extend(s) for s in fresh[: self.branching]]
+        if self.branching is not None:
+            fresh = fresh[: self.branching]
+        return [variant.extend(s) for s in fresh]
+
+
+@register
+class ReissueFromCompromisedMerchant(Strategy):
+    """Reissue from an established merchant whose key we hold.
+
+    The same idea as `mut-reissue`, moved upmarket. Where the mule merchant is
+    eleven days old and unrated, this one has traded for two years with signed
+    listings and a 0.86 reputation — so a control that learned "new and poorly
+    rated means fraud" sees nothing at all.
+
+    Kept precisely because it defeats Tier 2 rather than Tier 1. A range where
+    every attacker looks disreputable would teach the model one merchant's
+    score and let us report it as machine learning.
+    """
+
+    id = "mut-compromised"
+    targets = ("inv-02",)
+    rationale = "reissue from an established merchant we have compromised"
+
+    def apply(self, chain: MandateChain, ctx: RangeContext) -> MandateChain:
+        chain.cart.merchant_id = COMPROMISED_MERCHANT
+        ctx.sign_cart(chain.cart)
+        chain.payment.cart_id = chain.cart.mandate_id
+        chain.payment.beneficiary = ctx.merchant_vpa(COMPROMISED_MERCHANT)
+        ctx.sign_payment(chain.payment)
+        return chain

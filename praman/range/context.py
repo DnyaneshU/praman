@@ -34,6 +34,13 @@ ATTACKER_MERCHANT = "merchant_0777"
 0.42. Mule merchants are a real onboarding problem, and modelling one is what
 lets an attack sign a cart with a key it legitimately holds."""
 
+COMPROMISED_MERCHANT = "merchant_0250"
+"""An established, well-rated merchant whose signing key the attacker holds.
+
+Behaviourally indistinguishable from an honest one, which is deliberate: it is
+where Tier 2's ceiling lies. A control that learned "low reputation means
+fraud" would score perfectly against the mule merchant and see nothing here."""
+
 DEFAULT_OPENING_BALANCE = rupees(50000)
 
 
@@ -107,7 +114,11 @@ class RangeContext:
     @property
     def attacker_accounts(self) -> tuple[str, ...]:
         """Every account the attacker controls. Harm is money reaching any of them."""
-        return (self.attacker_vpa, self.merchant_vpa(ATTACKER_MERCHANT))
+        return (
+            self.attacker_vpa,
+            self.merchant_vpa(ATTACKER_MERCHANT),
+            self.merchant_vpa(COMPROMISED_MERCHANT),
+        )
 
     def harm(self) -> Decimal:
         """Rupees that reached the attacker. The only harm figure we report."""

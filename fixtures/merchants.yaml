@@ -1,26 +1,74 @@
-# Merchants in the range. `reputation` and `age_days` feed Tier 2 features.
-# `signed_listings: false` is the M-12 / catalog-poisoning surface.
+# Merchants in the range.
+#
+# `reputation`, `age_days` and `signed_listings` are Tier 2's features, so the
+# population is built so that NO SINGLE ONE OF THEM SEPARATES honest from
+# attacker-controlled. With four merchants, reputation was effectively a
+# merchant id and the model learned a lookup table; the ranges below overlap
+# deliberately so a useful model has to combine signals.
+#
+# Attacker-controlled merchants are listed in praman/range/context.py, not
+# flagged here — the range must not hand the defense the answer.
+
+# -- honest, established ----------------------------------------------------
 - id: merchant_0031
   name: Stride Athletics
   vpa: merchant_0031@bank
   reputation: 0.94
   age_days: 1840
   signed_listings: true
+
 - id: merchant_0044
   name: Kadam Footwear
   vpa: merchant_0044@bank
   reputation: 0.88
   age_days: 970
   signed_listings: true
+
+- id: merchant_0058
+  name: Deccan Running Co
+  vpa: merchant_0058@bank
+  reputation: 0.91
+  age_days: 1420
+  signed_listings: true
+
+- id: merchant_0071
+  name: Metro Sportsline
+  vpa: merchant_0071@bank
+  reputation: 0.79
+  age_days: 520
+  signed_listings: true
+
+# -- honest, but young or unpolished ----------------------------------------
+# These exist so "young" and "unsigned" are not synonyms for "attacker".
 - id: merchant_0102
   name: Bharat General Store
   vpa: merchant_0102@bank
   reputation: 0.71
   age_days: 210
   signed_listings: false
+
+- id: merchant_0118
+  name: Nashik Kicks
+  vpa: merchant_0118@bank
+  reputation: 0.64
+  age_days: 45
+  signed_listings: false
+
+# -- attacker-controlled ----------------------------------------------------
+# A mule merchant: new, unrated, unsigned. The easy case.
 - id: merchant_0777
   name: Value Sports Direct
   vpa: merchant_0777@bank
   reputation: 0.42
   age_days: 11
   signed_listings: false
+
+# A long-established, well-rated merchant whose cart-signing key the attacker
+# has compromised. It out-scores two honest merchants on every feature we
+# extract, which is exactly where Tier 2's ceiling lies.
+- id: merchant_0250
+  name: Sharma Sports House
+  vpa: merchant_0250@bank
+  reputation: 0.92
+  age_days: 640
+  signed_listings: true
