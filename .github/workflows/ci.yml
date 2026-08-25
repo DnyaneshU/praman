@@ -23,17 +23,34 @@ jobs:
       # The arena has no build step, but its templates are still compiled and
       # its helpers still asserted — see tests/frontend/. Node is here for that
       # and nothing else; there is no package.json to install.
+      #
+      # 22, not 20: the browser driver talks the DevTools Protocol over Node's
+      # built-in WebSocket, which only became a global in 21. On 20 it is not
+      # a failure the driver can explain — the symbol simply is not there.
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
 
       - run: pip install -e ".[dev]"
 
       - name: lint
         run: python -m praman lint
 
+      # No -q: pyproject already sets it in addopts, and a second one suppresses
+      # the summary line entirely — a green run would log almost nothing, and a
+      # red one would not say how many.
       - name: test
-        run: python -m pytest
+        run: |
+          set -o pipefail
+          python -m pytest --tb=short -rs 2>&1 | tee pytest.log
+
+      # Log downloads need admin on the repository, so a failure here is opaque
+      # to anyone who does not have it. Re-emitting the summary lines as
+      # workflow annotations puts which test failed on the run's front page,
+      # where the API and a passing glance can both see it.
+      - name: name what failed
+        if: failure()
+        run: grep -E '^(FAILED|ERROR)' pytest.log | sed 's/^/::error::/' || true
 
       # Reproducibility is a claim the repo makes out loud, so it is checked
       # rather than asserted: the same seed on a machine that is not ours has

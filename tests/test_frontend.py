@@ -56,8 +56,28 @@ CHROME = next(
     None,
 )
 
+
+def node_speaks_websocket() -> bool:
+    """Whether this Node exposes the WebSocket global the driver needs.
+
+    A capability check rather than a version check: `WebSocket` became a global
+    in Node 21, and on 20 the driver dies with a bare ReferenceError that
+    explains nothing. Asking Node directly also survives whatever a future
+    release does with it.
+    """
+    if NODE is None:
+        return False
+    probe = subprocess.run(
+        [NODE, "-p", "typeof WebSocket"], capture_output=True, text=True, timeout=30
+    )
+    return probe.stdout.strip() == "function"
+
+
 needs_node = pytest.mark.skipif(NODE is None, reason="node is not installed")
 needs_chrome = pytest.mark.skipif(CHROME is None, reason="chrome is not installed")
+needs_websocket = pytest.mark.skipif(
+    not node_speaks_websocket(), reason="this node has no WebSocket global (needs node >= 21)"
+)
 
 
 def free_port() -> int:
@@ -135,6 +155,7 @@ def test_the_arena_compiles_and_its_helpers_agree_with_the_python():
 
 @needs_node
 @needs_chrome
+@needs_websocket
 def test_the_arenas_controls_do_what_they_say(tmp_path):
     """Click through the page against the committed campaigns.
 
