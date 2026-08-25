@@ -16,7 +16,8 @@ from praman.console import setup as console_setup
 
 COMMANDS = {
     "demo": "An honest purchase, settled end to end",
-    "campaign": "Run a campaign and write episodes to JSONL",
+    "campaign": "Run a single-round campaign, baseline beside defended",
+    "adapt": "Run the adaptive campaign — the static vs adaptive gap",
     "test": "Run the test suite",
     "lint": "Ruff check and format check",
 }
@@ -52,6 +53,11 @@ def main(argv: list[str] | None = None) -> int:
         from praman.red.runner import main as campaign_main
 
         return campaign_main(rest)
+
+    if args.command == "adapt":
+        from praman.red.adaptive_report import main as adapt_main
+
+        return adapt_main(rest)
 
     if args.command == "test":
         return subprocess.call([sys.executable, "-m", "pytest", *rest])

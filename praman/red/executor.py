@@ -47,6 +47,8 @@ def run_episode(
     agent: VictimAgent | None = None,
     defense: Defense | None = None,
     round_: int = 0,
+    lineage: list[str] | None = None,
+    strategy: str | None = None,
 ) -> Episode:
     """Run one attack (or one honest purchase) end to end.
 
@@ -86,6 +88,8 @@ def run_episode(
                 episode_id=episode_id,
                 round=round_,
                 attack_id=attack.id if attack else BENIGN,
+                lineage=lineage or [],
+                strategy=strategy,
                 rail_profile=ctx.profile.name,
                 victim_model=agent.model_name,
                 seed=seed,

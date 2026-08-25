@@ -20,7 +20,7 @@
 - **Money is `Decimal`, stored as integer paise.** Never float. Never `==` on floats.
 - **Every verdict names its reason.** A block that cannot say which invariant failed is a bug.
 - **Harm is ledger-verified.** No model, scorer or heuristic decides whether harm occurred — only an account balance delta.
-- **Seeded RNG everywhere** (`--seed`, default 1729). Same seed must reproduce identical campaign output.
+- **Seeded RNG everywhere** (`--seed`, default 1729). Same seed reproduces every result field; `timestamp` and `latency_ms` are measurements of the run, not results from it, and are excluded by name.
 - **`refusal` is a first-class episode verdict**, distinct from `block`. An LLM refusal must never be counted as a defended attack.
 - Ruff clean, pytest green before every commit. Commit at the end of every task.
 
@@ -499,7 +499,7 @@ Testing is **per-session, not a phase.** Every task is test-first, and each sess
 | Invariants | Each blocks its attack **and names the right invariant id** | `test_invariants.py` |
 | Monitor | Ledger cannot be reached bypassing the monitor | `test_monitor.py` |
 | Mutator | Blocked attack yields ≥1 variant that gets through | `test_mutator_search.py` |
-| Campaign | Same seed → byte-identical output | `test_campaign.py` |
+| Campaign | Same seed → identical results (timestamp/latency excluded) | `test_reproducibility.py` |
 | API | Imports with no credential; replay streams; live is 403 in replay mode | `test_api.py` |
 
 Two properties are worth more than the rest combined: **every attack must succeed undefended**, and **every block must name its invariant.** Without the first, the defense is measuring nothing. Without the second, the explainability claim is false.
