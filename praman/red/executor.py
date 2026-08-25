@@ -27,6 +27,7 @@ from praman.blue.verdict import Verdict
 from praman.range.agent import ScriptedAgent, VictimAgent
 from praman.range.context import RangeContext
 from praman.range.mandates import MandateChain
+from praman.range.ollama_agent import AgentConfused, AgentRefusal
 from praman.range.purchase import settle_chain
 from praman.red.attacks.base import Attack
 from praman.red.episode import ChainSnapshot, Episode
@@ -65,7 +66,25 @@ def run_episode(
             if attack:
                 attack.prepare(ctx)
 
-            honest = agent.shop(ctx.catalog.task(task_id), ctx)
+            try:
+                honest = agent.shop(ctx.catalog.task(task_id), ctx)
+            except (AgentRefusal, AgentConfused) as exc:
+                # A model that declined, or answered incoherently, has told us
+                # nothing about the control. Recording it as a block would
+                # inflate the one figure the submission rests on.
+                return _non_result(
+                    episode_id=episode_id,
+                    attack=attack,
+                    agent=agent,
+                    ctx=ctx,
+                    seed=seed,
+                    round_=round_,
+                    lineage=lineage,
+                    strategy=strategy,
+                    outcome="refusal" if isinstance(exc, AgentRefusal) else "error",
+                    detail=str(exc),
+                )
+
             chains = attack.plan(honest, ctx) if attack else [honest]
 
             before = ctx.harm()
@@ -118,6 +137,38 @@ def run_episode(
             )
         finally:
             ctx.ledger.close()
+
+
+def _non_result(
+    *,
+    episode_id: str,
+    attack: Attack | None,
+    agent: VictimAgent,
+    ctx: RangeContext,
+    seed: int,
+    round_: int,
+    lineage: list[str] | None,
+    strategy: str | None,
+    outcome: str,
+    detail: str,
+) -> Episode:
+    """An episode that never reached the control, and says so.
+
+    Refusals and harness errors are excluded from every rate in metrics.py.
+    They describe the victim model or our own harness, not the defense.
+    """
+    return Episode(
+        episode_id=episode_id,
+        round=round_,
+        attack_id=attack.id if attack else BENIGN,
+        lineage=lineage or [],
+        strategy=strategy,
+        rail_profile=ctx.profile.name,
+        victim_model=agent.model_name,
+        seed=seed,
+        outcome=outcome,
+        detail=detail,
+    )
 
 
 def _settle_all(
