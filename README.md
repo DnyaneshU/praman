@@ -1,5 +1,7 @@
 # प्रमाण Praman
 
+[![ci](https://github.com/DnyaneshU/praman/actions/workflows/ci.yml/badge.svg)](https://github.com/DnyaneshU/praman/actions/workflows/ci.yml)
+
 **Breach and attack simulation for agentic payment mandates.**
 
 An AI agent holds a signed mandate to spend your money. Praman attacks that
@@ -105,7 +107,7 @@ Python 3.12 and nothing else. No Node, no npm, no build step — Vue and the
 typefaces are vendored, so a clone runs offline.
 
 ```bash
-git clone https://github.com/OWNER/praman.git
+git clone https://github.com/DnyaneshU/praman.git
 cd praman
 python -m venv .venv && .venv/Scripts/activate     # Unix: source .venv/bin/activate
 pip install -e ".[dev]"
