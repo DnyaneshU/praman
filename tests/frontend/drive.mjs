@@ -63,6 +63,22 @@ const evaluate = async (expression) => {
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/** Poll a page-side expression until it is true, or give up loudly.
+ *
+ * Fixed sleeps make this suite a coin flip on a cold CI runner: too short and
+ * a healthy page fails, too long and every run pays for the worst case. A
+ * flaky check is worse than no check, because the badge it turns red is the
+ * one claiming the numbers reproduce.
+ */
+async function until(expression, { timeout = 20000, what = expression } = {}) {
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    if (await evaluate(expression)) return;
+    await wait(100);
+  }
+  throw new Error(`timed out after ${timeout}ms waiting for: ${what}`);
+}
+
 /** Screenshots are for looking at a change, not for the assertions. */
 async function shot(name) {
   if (!shotDir) return;
@@ -71,7 +87,8 @@ async function shot(name) {
 }
 
 await send("Page.navigate", { url: pageUrl });
-await wait(2500);
+await until(`document.querySelectorAll(".campaign").length > 0`, { what: "the rail to populate" });
+await until(`document.querySelectorAll(".ep").length > 0`, { what: "the first campaign to load" });
 
 const results = [];
 const record = (name, ok, detail = "") => results.push({ name, ok, detail });
@@ -84,7 +101,8 @@ record("rail lists every campaign", railCount === apiCount, `${railCount} of ${a
 // -- clicking a campaign loads it ------------------------------------------
 const before = await evaluate(`document.querySelector(".campaign-head h1").textContent.trim()`);
 await evaluate(`document.querySelectorAll(".campaign")[0].click()`);
-await wait(900);
+await until(`document.querySelector(".campaign-head h1").textContent.trim() !== ${JSON.stringify(before)}`, { what: "the header to change" });
+await until(`document.querySelectorAll(".ep").length > 0`, { what: "the new campaign to load" });
 const after = await evaluate(`document.querySelector(".campaign-head h1").textContent.trim()`);
 const rowsAfter = await evaluate(`document.querySelectorAll(".ep").length`);
 record("clicking a campaign switches it", before !== after, `${before} -> ${after}`);
@@ -96,7 +114,7 @@ record(
 
 // -- selecting an episode drives the chain and verdict ----------------------
 await evaluate(`document.querySelectorAll(".ep")[1].click()`);
-await wait(250);
+await until(`document.querySelectorAll('.ep[aria-selected="true"]').length === 1`, { what: "the episode to be selected" });
 record(
   "clicking an episode selects it",
   await evaluate(`document.querySelectorAll('.ep[aria-selected="true"]').length === 1`)
@@ -112,7 +130,7 @@ record(
 
 // -- switching campaigns clears the previous selection ----------------------
 await evaluate(`document.querySelectorAll(".campaign")[2].click()`);
-await wait(900);
+await until(`document.querySelectorAll(".ep").length > 0`, { what: "the third campaign to load" });
 record(
   "switching campaigns drops the previous episode selection",
   await evaluate(`document.querySelectorAll('.ep[aria-selected="true"]').length === 0`)
@@ -123,21 +141,21 @@ const adaptiveIndex = await evaluate(`
   [...document.querySelectorAll(".campaign")].findIndex(c => c.textContent.includes("adaptive"))
 `);
 await evaluate(`document.querySelectorAll(".campaign")[${adaptiveIndex}].click()`);
-await wait(1000);
+await until(`document.querySelectorAll(".feed .segments button").length > 1`, { what: "the round filter to appear" });
 
 const roundButtons = await evaluate(`document.querySelectorAll(".feed .segments button").length`);
 record("an adaptive campaign offers a round filter", roundButtons > 1, `${roundButtons} buttons`);
 
 const allRows = await evaluate(`document.querySelectorAll(".ep").length`);
 await evaluate(`document.querySelectorAll(".feed .segments button")[1].click()`);
-await wait(250);
+await until(`document.querySelectorAll(".round-marker").length === 1`, { what: "the feed to narrow to one round" });
 const r0Rows = await evaluate(`document.querySelectorAll(".ep").length`);
 const r0Markers = await evaluate(`document.querySelectorAll(".round-marker").length`);
 record("the round filter narrows the feed", r0Rows > 0 && r0Rows < allRows, `${allRows} -> ${r0Rows}`);
 record("filtering to one round shows one round", r0Markers === 1, `${r0Markers} markers`);
 
 await evaluate(`document.querySelectorAll(".feed .segments button")[0].click()`);
-await wait(250);
+await until(`document.querySelectorAll(".ep").length === ${allRows}`, { what: "every round to come back" });
 record(
   "the all button restores every round",
   (await evaluate(`document.querySelectorAll(".ep").length`)) === allRows
@@ -147,7 +165,8 @@ await shot("loaded");
 
 // -- replay ----------------------------------------------------------------
 await evaluate(`document.querySelector(".replay").click()`);
-await wait(1200);
+await until(`document.querySelector(".link-state .text").textContent.trim() === "streaming"`, { what: "the replay socket to open" });
+await until(`document.querySelectorAll(".ep").length > 0`, { what: "the first replayed episode" });
 const streaming = await evaluate(`document.querySelector(".link-state .text").textContent.trim()`);
 const midRows = await evaluate(`document.querySelectorAll(".ep").length`);
 record("replay opens the socket and streams", streaming === "streaming", streaming);
@@ -156,14 +175,17 @@ record(
   "replay disables its own button while running",
   await evaluate(`document.querySelector(".replay").disabled === true`)
 );
-await wait(2000);
+// Let a few more land so the screenshot shows a replay in progress.
+await until(`document.querySelectorAll(".ep").length >= 4`, { what: "a few episodes to stream" });
 await shot("replaying");
 
 // -- switching campaigns mid-replay must stop the stream --------------------
 await evaluate(`document.querySelectorAll(".campaign")[0].click()`);
-await wait(400);
+await until(`document.querySelectorAll(".ep").length > 0`, { what: "the switched-to campaign to load" });
 const rowsA = await evaluate(`document.querySelectorAll(".ep").length`);
-await wait(1600);
+// Deliberately wall-clock: the assertion IS that no more episodes arrive.
+// Several replay ticks (450ms each) have to pass with the count unmoved.
+await wait(2500);
 const rowsB = await evaluate(`document.querySelectorAll(".ep").length`);
 record(
   "switching campaigns mid-replay stops the old stream",

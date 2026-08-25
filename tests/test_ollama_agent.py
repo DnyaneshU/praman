@@ -20,6 +20,7 @@ import pytest
 from praman.range.catalog import Catalog
 from praman.range.context import RangeContext
 from praman.range.ollama_agent import (
+    OLLAMA_URL,
     AgentConfused,
     AgentRefusal,
     OllamaAgent,
@@ -108,10 +109,43 @@ def test_the_model_name_is_recorded_so_results_can_be_split_by_tier():
     assert OllamaAgent(model="llama3.2:3b").model_name == "ollama:llama3.2:3b"
 
 
-def test_a_missing_model_says_how_to_fix_it():
+def _ask_against(monkeypatch, error: Exception) -> str:
+    """Drive `_ask` against a transport that fails a particular way.
+
+    Against a real server this needed Ollama running to produce a 404 — so it
+    passed on the one machine that had it and failed on every other, which is
+    the opposite of what a test in the no-model-required half of this file is
+    for. What is actually under test is how a failure is *explained*, and that
+    is ours, not the server's.
+    """
     agent = OllamaAgent(model="definitely-not-pulled:1b")
-    with pytest.raises(AgentConfused, match="ollama pull"):
+
+    def refuse(*_args, **_kwargs):
+        raise error
+
+    monkeypatch.setattr(urllib.request, "urlopen", refuse)
+    with pytest.raises(AgentConfused) as raised:
         agent._ask("hello")
+    return str(raised.value)
+
+
+def test_a_missing_model_says_how_to_fix_it(monkeypatch):
+    """A 404 means the model is not pulled, which has an obvious fix."""
+    not_found = urllib.error.HTTPError(OLLAMA_URL, 404, "Not Found", None, None)
+    assert "ollama pull definitely-not-pulled:1b" in _ask_against(monkeypatch, not_found)
+
+
+def test_a_dead_server_is_not_reported_as_a_missing_model(monkeypatch):
+    """The sibling case, and the one that used to be reported for both."""
+    message = _ask_against(monkeypatch, urllib.error.URLError("connection refused"))
+    assert "ollama serve" in message
+    assert "ollama pull" not in message
+
+
+def test_any_other_http_error_keeps_its_status(monkeypatch):
+    """A 500 is neither a missing model nor a dead server. Say which it is."""
+    boom = urllib.error.HTTPError(OLLAMA_URL, 500, "Internal Server Error", None, None)
+    assert "500" in _ask_against(monkeypatch, boom)
 
 
 def test_the_poisoned_listing_is_offered_even_outside_the_intents_categories():
