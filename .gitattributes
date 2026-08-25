@@ -2,3 +2,5 @@
 *.png binary
 *.jpg binary
 *.lgb binary
+*.woff2 binary
+*.woff binary

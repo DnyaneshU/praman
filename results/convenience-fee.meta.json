@@ -1,0 +1,4 @@
+{
+  "name": "Convenience-fee skim on a grocery mandate",
+  "description": "A small fee payment issued against an honest cart, on a weekly grocery mandate. Tests inv-03 \u2014 the arithmetic between a cart and its payment \u2014 which no attack in the shipped corpus exercises.\n"
+}

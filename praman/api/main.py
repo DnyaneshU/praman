@@ -18,6 +18,7 @@ constructs a model client, and `test_api.py` asserts the import.
 
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
 
@@ -92,9 +93,21 @@ def start_campaign() -> dict:
 
 # The arena is mounted last so API routes always win. It ships as plain files —
 # no build step, no bundle to regenerate — so this is the whole frontend deploy.
+#
+# A missing static directory used to skip this block in silence, which deploys
+# as an API that answers every request correctly and a site with no pages. It
+# is a packaging failure, so it says so: the assets are declared in
+# pyproject.toml under tool.setuptools.package-data.
 if STATIC_DIR.is_dir():
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
     @app.get("/")
     def index() -> FileResponse:
         return FileResponse(STATIC_DIR / "index.html")
+
+else:  # pragma: no cover - only reachable from a broken install
+    logging.getLogger(__name__).error(
+        "no arena at %s — the frontend was not packaged; check "
+        "tool.setuptools.package-data in pyproject.toml",
+        STATIC_DIR,
+    )

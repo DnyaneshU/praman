@@ -143,7 +143,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--tiers", default="none", help='control to run behind, e.g. "1"; "none" for undefended'
     )
-    parser.add_argument("--out", type=Path, default=Path("results/model-tiers.jsonl"))
+    # Under results/studies/ rather than results/ itself. A study is not a
+    # campaign — these 48 episodes span four victim models and no single rail
+    # or control — and the arena serves every *.jsonl in results/ as something
+    # a viewer can replay. Dropping it beside the campaigns put an entry in the
+    # picker that no combination of facets could ever select.
+    parser.add_argument("--out", type=Path, default=Path("results/studies/model-tiers.jsonl"))
     args = parser.parse_args(argv)
     console_setup()
 

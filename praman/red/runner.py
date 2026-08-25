@@ -20,9 +20,10 @@ from praman.blue.defense import Defense
 from praman.console import setup as console_setup
 from praman.money import fmt
 from praman.range.agent import ScriptedAgent
+from praman.range.catalog import FIXTURES_DIR
 from praman.red.attacks import ATTACKS
 from praman.red.episode import Episode, write_jsonl
-from praman.red.executor import run_episode
+from praman.red.executor import BENIGN, run_episode
 
 RULE = "─" * 76
 
@@ -34,6 +35,8 @@ def run_campaign(
     profile: str = "autopay",
     defense: Defense | None = None,
     tasks: list[str] | None = None,
+    attacks: list[str] | None = None,
+    fixtures: Path | str = FIXTURES_DIR,
 ) -> list[Episode]:
     """One episode per attack per repeat, plus the same number of benign runs.
 
@@ -43,15 +46,20 @@ def run_campaign(
     Semantic attacks need a susceptible agent; structural ones do not care. The
     agent is chosen per attack and recorded on every episode, because
     susceptibility is a variable we report rather than a constant we assume.
+
+    `attacks` narrows the corpus and `fixtures` points at a different range —
+    both exist for scenarios, and both default to what the shipped campaigns
+    use so the committed numbers are unaffected.
     """
     tasks = tasks or ["task-shoes", "task-trainer"]
+    attack_ids = sorted(attacks) if attacks else sorted(ATTACKS)
     episodes: list[Episode] = []
 
     for index in range(repeats):
         seed_i = seed + index
         task_id = tasks[index % len(tasks)]
 
-        for attack_id in sorted(ATTACKS):
+        for attack_id in attack_ids:
             attack = ATTACKS[attack_id]()
             episodes.append(
                 run_episode(
@@ -62,6 +70,7 @@ def run_campaign(
                     profile=profile,
                     agent=ScriptedAgent(susceptible=attack.attack_class == "semantic"),
                     defense=defense,
+                    fixtures=fixtures,
                 )
             )
 
@@ -74,6 +83,7 @@ def run_campaign(
                 profile=profile,
                 agent=ScriptedAgent(),
                 defense=defense,
+                fixtures=fixtures,
             )
         )
 
@@ -104,7 +114,8 @@ def _defended_table(baseline: list[Episode], defended: list[Episode]) -> None:
     print()
     print(f"  {'attack':<7} {'name':<30} {'ASR':>12} {'at risk':>12} {'left':>11} {'rule':>8}")
     print(f"  {'-' * 7} {'-' * 30} {'-' * 12} {'-' * 12} {'-' * 11} {'-' * 8}")
-    for attack_id in sorted(ATTACKS):
+    # From the episodes, not the registry: a campaign may have run a subset.
+    for attack_id in sorted({e.attack_id for e in defended} - {BENIGN}):
         base_rows = _rows(baseline, attack_id)
         def_rows = _rows(defended, attack_id)
         invariant = next((e.violated_invariant for e in def_rows if e.violated_invariant), "-")

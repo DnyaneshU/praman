@@ -17,10 +17,12 @@ whole search replays identically from a seed on someone else's laptop.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 from praman.blue.defense import Defense
 from praman.blue.verdict import Verdict
 from praman.range.agent import ScriptedAgent
+from praman.range.catalog import FIXTURES_DIR
 from praman.red.attacks import ATTACKS
 from praman.red.episode import Episode
 from praman.red.executor import run_episode
@@ -49,6 +51,7 @@ def _run_variant(
     defense: Defense,
     round_: int,
     episode_id: str,
+    fixtures: Path | str,
 ) -> Episode:
     attack = variant.build()
     return run_episode(
@@ -62,6 +65,7 @@ def _run_variant(
         round_=round_,
         lineage=variant.lineage,
         strategy=variant.strategies[-1] if variant.strategies else None,
+        fixtures=fixtures,
     )
 
 
@@ -74,12 +78,15 @@ def run_adaptive_campaign(
     mutator: Mutator | None = None,
     population: int = 12,
     task_id: str = "task-shoes",
+    attacks: list[str] | None = None,
+    fixtures: Path | str = FIXTURES_DIR,
 ) -> CampaignResult:
     """Run seed attacks, then let the attacker adapt for `rounds` rounds."""
     defense = defense or Defense(tiers=(1,))
     mutator = mutator or SearchMutator()
 
-    frontier = [Variant(attack_id) for attack_id in sorted(ATTACKS)]
+    seeds = sorted(attacks) if attacks else sorted(ATTACKS)
+    frontier = [Variant(attack_id) for attack_id in seeds]
     episodes: list[Episode] = []
     breakthroughs: list[Variant] = []
     seen: set[Variant] = set(frontier)
@@ -98,6 +105,7 @@ def run_adaptive_campaign(
                 defense=defense,
                 round_=round_,
                 episode_id=f"ep-{len(episodes):04d}",
+                fixtures=fixtures,
             )
             episodes.append(episode)
             candidates.append(Candidate(variant, episode))
@@ -116,6 +124,7 @@ def run_adaptive_campaign(
                 profile=profile,
                 defense=defense,
                 round_=round_,
+                fixtures=fixtures,
             )
         )
 

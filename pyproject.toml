@@ -30,6 +30,23 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 include = ["praman*"]
 
+# Without this the wheel is Python files and nothing else — no arena, no
+# corpus.yaml — and an installed Praman 404s every asset and crashes on
+# `load_corpus()`. The container hid it: it runs from /app with praman/ copied
+# alongside, so the source tree wins on sys.path and the install is only ever
+# supplying dependencies. Listed explicitly rather than with `**` so a new kind
+# of asset has to be declared instead of silently not shipping.
+[tool.setuptools.package-data]
+praman = [
+    "red/*.yaml",
+    "api/static/*.html",
+    "api/static/*.css",
+    "api/static/*.js",
+    "api/static/vendor/*.js",
+    "api/static/vendor/*.css",
+    "api/static/vendor/fonts/*.woff2",
+]
+
 [tool.ruff]
 line-length = 100
 target-version = "py312"

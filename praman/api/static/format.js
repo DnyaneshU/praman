@@ -27,11 +27,38 @@ export function percent(value) {
   return value === null || value === undefined ? "—" : `${(value * 100).toFixed(0)}%`;
 }
 
-/** How an episode reads at a glance. Money moved is the only "through". */
+/** A change in percentage points, with its sign kept. "+27.1 pts". */
+export function signed(delta) {
+  if (delta === null || delta === undefined) return "—";
+  const points = delta * 100;
+  return `${points >= 0 ? "+" : "−"}${Math.abs(points).toFixed(1)} pts`;
+}
+
+/** How an episode reads at a glance. Money moved is the only "through".
+ *
+ * Honest traffic that the control refused gets its own class rather than
+ * sharing "benign". It is a false positive — the one number that decides
+ * whether a control could ever ship — and rendering it the same as a clean
+ * pass is how a broken control looks like a working one.
+ */
 export function classify(episode) {
-  if (episode.attack_id === "benign") return "benign";
+  if (episode.attack_id === "benign") {
+    return episode.outcome === "block" || episode.escalated ? "refused" : "benign";
+  }
   if (Number(episode.rupees_moved) > 0) return "through";
   if (episode.escalated) return "held";
+  return "blocked";
+}
+
+/** What the amount column says for an episode. */
+export function outcomeLabel(episode) {
+  if (Number(episode.rupees_moved) > 0) return rupees(episode.rupees_moved);
+  if (episode.outcome === "refusal") return "declined";
+  if (episode.outcome === "error") return "error";
+  if (episode.escalated) return "held";
+  if (episode.attack_id === "benign") {
+    return episode.outcome === "block" ? "refused" : "settled";
+  }
   return "blocked";
 }
 

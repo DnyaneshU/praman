@@ -25,6 +25,7 @@ from praman.blue.defense import Defense
 from praman.blue.monitor import Mediation, Monitor
 from praman.blue.verdict import Verdict
 from praman.range.agent import ScriptedAgent, VictimAgent
+from praman.range.catalog import FIXTURES_DIR
 from praman.range.context import RangeContext
 from praman.range.mandates import MandateChain
 from praman.range.ollama_agent import AgentConfused, AgentRefusal
@@ -50,16 +51,25 @@ def run_episode(
     round_: int = 0,
     lineage: list[str] | None = None,
     strategy: str | None = None,
+    fixtures: Path | str = FIXTURES_DIR,
 ) -> Episode:
     """Run one attack (or one honest purchase) end to end.
 
     `attack=None` is benign traffic: same agent, same range, no tamper. It is
     the false-positive signal, so it must travel the identical path.
+
+    `fixtures` is where the catalogue is read from, and it is re-read per
+    episode rather than shared: attacks poison it (M-08 writes into product
+    metadata), so a catalogue held across episodes would leak one episode's
+    tampering into the next. A scenario points this at a merged directory of
+    its own; everything else uses the shipped range.
     """
     agent = agent or ScriptedAgent()
 
     with tempfile.TemporaryDirectory() as tmp:
-        ctx = RangeContext.build(Path(tmp) / "range.db", profile=profile, seed=seed)
+        ctx = RangeContext.build(
+            Path(tmp) / "range.db", profile=profile, seed=seed, fixtures=fixtures
+        )
         try:
             monitor = Monitor(defense, ctx) if defense else None
 

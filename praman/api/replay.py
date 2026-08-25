@@ -12,8 +12,9 @@ judge re-running the campaign locally gets the same numbers back.
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from fastapi import WebSocket
@@ -36,26 +37,77 @@ def _label(tiers: list[int]) -> str:
     return "Tier " + "+".join(str(t) for t in tiers)
 
 
+def _read_meta(path: Path) -> dict:
+    """A scenario's `<id>.meta.json`, if it wrote one.
+
+    Only scenarios author these; the generated matrix names itself from the
+    rail and tiers its episodes already carry. A malformed sidecar costs the
+    campaign its title, never its place in the picker.
+    """
+    sidecar = path.with_suffix(".meta.json")
+    if not sidecar.is_file():
+        return {}
+    try:
+        with sidecar.open(encoding="utf-8") as fh:
+            meta = json.load(fh)
+    except (ValueError, OSError) as exc:
+        logger.warning("ignoring unreadable %s: %s", sidecar.name, exc)
+        return {}
+    return meta if isinstance(meta, dict) else {}
+
+
+RAILS = {"autopay": "UPI Autopay", "uap": "NPCI UAP"}
+
+
 @dataclass(frozen=True)
 class CampaignRecord:
     id: str
     path: Path
     episodes: list[Episode]
+    meta: dict = field(default_factory=dict)
+    """Whatever `<id>.meta.json` said, if a scenario wrote one."""
 
     def describe(self) -> dict:
+        """Everything the picker needs to name and rank this campaign.
+
+        The picker lists campaigns rather than synthesising one from a rail and
+        a tier selection. It used to do the latter, and two committed campaigns
+        — `autopay-tier1` and `uap-tier1` — were unreachable because the
+        adaptive run shares their rail and tiers and won the tie. A list cannot
+        hide a campaign the way a lookup can.
+        """
         rounds = sorted({e.round for e in self.episodes})
         first = self.episodes[0]
+        adaptive = len(rounds) > 1
+        tiers = first.defense_tiers
         return {
             "id": self.id,
+            "name": self.meta.get("name") or self._name(first.rail_profile, tiers, adaptive),
+            "description": self.meta.get("description"),
+            "authored": bool(self.meta),
             "episodes": len(self.episodes),
             "rounds": len(rounds),
-            "adaptive": len(rounds) > 1,
+            "adaptive": adaptive,
             "rail": first.rail_profile,
-            "tiers": first.defense_tiers,
-            "label": _label(first.defense_tiers),
+            "rail_name": RAILS.get(first.rail_profile, first.rail_profile),
+            "tiers": tiers,
+            "label": _label(tiers),
+            # The headline numbers, so selecting a campaign fills the scoreboard
+            # before anything streams. A page of em-dashes waiting on a replay
+            # reads as broken rather than as ready.
             "asr": metrics.asr(self.episodes),
+            "benign": metrics.benign_pass_rate(self.episodes),
             "moved": str(metrics.rupees_moved(self.episodes)),
+            "static_asr": metrics.static_asr(self.episodes),
+            "adaptive_asr": metrics.adaptive_asr(self.episodes),
+            "adaptive_delta": metrics.adaptive_delta(self.episodes),
+            "rounds_to_break": metrics.rounds_to_break(self.episodes),
         }
+
+    @staticmethod
+    def _name(rail: str, tiers: list[int], adaptive: bool) -> str:
+        control = _label(tiers)
+        return f"{RAILS.get(rail, rail)} · {control}" + (" · adaptive" if adaptive else "")
 
 
 class CampaignStore:
@@ -70,6 +122,13 @@ class CampaignStore:
         self.directory = Path(directory)
 
     def list(self) -> list[CampaignRecord]:
+        """Campaigns only, and only from the top level.
+
+        `glob` rather than `rglob` is load-bearing: `results/studies/` holds
+        runs that are not campaigns — the victim-model study spans four models
+        and belongs to no single rail — and serving one as a campaign puts a
+        row in the picker that nothing on the page can select.
+        """
         if not self.directory.is_dir():
             return []
         records = [self._load(p) for p in sorted(self.directory.glob("*.jsonl"))]
@@ -94,7 +153,9 @@ class CampaignStore:
         except (ValueError, OSError) as exc:
             logger.warning("skipping unreadable campaign %s: %s", path.name, exc)
             return None
-        return CampaignRecord(id=path.stem, path=path, episodes=episodes) if episodes else None
+        if not episodes:
+            return None
+        return CampaignRecord(id=path.stem, path=path, episodes=episodes, meta=_read_meta(path))
 
 
 async def stream_episodes(websocket: WebSocket, record: CampaignRecord) -> None:

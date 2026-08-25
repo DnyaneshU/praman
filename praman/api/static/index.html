@@ -4,18 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Praman Arena</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<meta name="description" content="Breach and attack simulation for agentic payment mandate controls.">
+
+<!-- Typefaces are vendored, not linked. Same reason as Vue below: the arena
+     gets projected in a hall on whatever network happens to exist, and a font
+     that falls back mid-presentation is a page that looks broken at the worst
+     possible moment. Regenerate with scripts/fetch_fonts.py. -->
+<link rel="stylesheet" href="/static/vendor/fonts.css">
 <link rel="stylesheet" href="/static/arena.css">
 </head>
 <body>
 
 <div id="app"></div>
 
-<!-- Vue is vendored, not pulled from a CDN. A demo that needs the internet is
-     a demo that fails in the room, and a judge cloning the repo gets a working
-     arena with no npm install and no network. -->
+<!-- Vue is vendored, not pulled from a CDN. A judge cloning the repo gets a
+     working arena with no npm install and no network. -->
 <script src="/static/vendor/vue.global.prod.js"></script>
 <script type="module" src="/static/arena.js"></script>
 </body>
