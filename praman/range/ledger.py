@@ -32,7 +32,7 @@ from pydantic import BaseModel, ConfigDict
 
 from praman.range.mandates import PaymentMandate
 
-__all__ = ["Ledger", "SettlementResult"]
+__all__ = ["Ledger", "SettlementResult", "UnmediatedSettlement"]
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS accounts (
@@ -52,6 +52,15 @@ CREATE TABLE IF NOT EXISTS transactions (
     settled_at  TEXT NOT NULL
 );
 """
+
+
+class UnmediatedSettlement(RuntimeError):
+    """Raised when something tries to settle without going through the monitor.
+
+    This is what makes "out-of-band" an enforced property rather than a claim
+    on a slide: once a monitor is attached, the ledger refuses any settlement
+    it did not approve, no matter who is calling.
+    """
 
 
 class SettlementResult(BaseModel):
@@ -75,6 +84,7 @@ class Ledger:
         self._local = threading.local()
         self._registry: list[sqlite3.Connection] = []
         self._registry_lock = threading.Lock()
+        self._mediator: object | None = None
         self._connect().executescript(_SCHEMA)
 
     # -- connection handling -------------------------------------------------
@@ -164,6 +174,17 @@ class Ledger:
             conn.execute("ROLLBACK")
             raise
 
+    # -- mediation -----------------------------------------------------------
+
+    def require_mediation(self, monitor) -> None:
+        """Refuse any settlement this monitor has not approved.
+
+        Attached by the monitor itself at construction. Detaching is not
+        offered: a control you can turn off from inside the range is not a
+        control.
+        """
+        self._mediator = monitor
+
     # -- settlement ----------------------------------------------------------
 
     def settle(self, payment: PaymentMandate, source: str) -> SettlementResult:
@@ -172,6 +193,10 @@ class Ledger:
         The balance check and both updates share one `BEGIN IMMEDIATE`
         transaction, so concurrent settlements cannot overdraw.
         """
+        if self._mediator is not None and not self._mediator.approves(payment.mandate_id):
+            raise UnmediatedSettlement(
+                f"payment {payment.mandate_id} reached the ledger without a verdict"
+            )
         amount = int(payment.amount)
         conn = self._connect()
         try:

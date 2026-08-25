@@ -42,6 +42,17 @@ class Attack(ABC):
     Only S-03 needs it, but it has to be genuine: a redemption race settled
     sequentially is not a race, and the finding would be theatre."""
 
+    def prepare(self, ctx: RangeContext) -> None:  # noqa: B027 - optional hook
+        """Poison the environment before the agent shops.
+
+        Deliberately concrete and empty: most attacks have nothing to set up,
+        and forcing every one of them to declare a no-op would be noise.
+
+        Semantic attacks live here: M-08 writes its payload into product
+        metadata, so the harm comes from the agent's own poisoned choice rather
+        than from tampering with the chain afterwards.
+        """
+
     @abstractmethod
     def apply(self, chain: MandateChain, ctx: RangeContext) -> MandateChain:
         """Return a tampered chain. Must not mutate the input in place."""

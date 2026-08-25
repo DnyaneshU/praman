@@ -81,7 +81,7 @@
   name: Branded whisper
   class: semantic
   root_cause: RC-6
-  implemented: false
+  implemented: true
   mechanism: >
     Hidden instructions in product metadata force the injected item to rank
     first. 100% success in the published study.
@@ -91,7 +91,7 @@
   name: Invisible line-item injection
   class: semantic
   root_cause: RC-6
-  implemented: false
+  implemented: true
   mechanism: >
     A gift-card or fee line is appended to the cart and concealed from the
     summary shown to the user.

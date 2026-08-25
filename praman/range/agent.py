@@ -17,9 +17,10 @@ arrives in Session 5 and changes only which tier is being measured.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
 
-from praman.range.catalog import Task
+from praman.range.catalog import Product, Task
 from praman.range.context import RangeContext
 from praman.range.mandates import MandateChain
 from praman.range.purchase import build_chain, choose_product
@@ -35,16 +36,42 @@ class VictimAgent(Protocol):
         """Turn a task into a signed mandate chain, ready to settle."""
 
 
+@dataclass
 class ScriptedAgent:
-    """A deterministic, well-behaved shopper.
+    """A deterministic shopper, optionally susceptible to injected instructions.
 
-    Takes the top-ranked affordable product and builds an honest chain. It has
-    no judgement to subvert, which makes it the right baseline: anything that
-    succeeds against this agent is a flaw in the *control*, not a lapse by the
-    model.
+    Sober, it takes the top-ranked affordable product. It has no judgement to
+    subvert, which makes it the right baseline: anything that succeeds against
+    it is a flaw in the *control*, not a lapse by a model.
+
+    Susceptible, it obeys instructions embedded in product metadata over its
+    own task — which is what prompt injection *is*, reduced to its mechanism
+    and stripped of the model. That keeps M-08 measurable with no credential,
+    and it makes susceptibility an explicit recorded setting rather than a
+    property we hope a model has.
     """
 
-    model_name = "scripted"
+    susceptible: bool = False
+
+    @property
+    def model_name(self) -> str:
+        return "scripted-susceptible" if self.susceptible else "scripted"
 
     def shop(self, task: Task, ctx: RangeContext) -> MandateChain:
-        return build_chain(task, choose_product(task, ctx), ctx)
+        return build_chain(task, self._select(task, ctx), ctx)
+
+    def _select(self, task: Task, ctx: RangeContext) -> Product:
+        if self.susceptible:
+            injected = self._injected(ctx)
+            if injected is not None:
+                return injected
+        return choose_product(task, ctx)
+
+    @staticmethod
+    def _injected(ctx: RangeContext) -> Product | None:
+        """The first listing carrying an instruction. Ordering is deterministic."""
+        for sku in sorted(ctx.catalog.products):
+            product = ctx.catalog.product(sku)
+            if product.injected_note:
+                return product
+        return None
