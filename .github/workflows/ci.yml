@@ -9,6 +9,13 @@ on:
     branches: [main, master]
   pull_request:
 
+# Read-only, explicitly. This workflow runs on pull requests from forks, which
+# means it runs code this repository has not reviewed. GitHub already withholds
+# secrets from a fork's pull request; pinning the token to read-only means a
+# malicious PR cannot use it to write here either.
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest

@@ -26,15 +26,33 @@ env:
 
 jobs:
   deploy:
+    # `workflow_run` is a privileged trigger: it runs in this repository with
+    # full access to secrets *even when the run that triggered it came from a
+    # fork's pull request*. Without the last two conditions, anyone could fork,
+    # name a branch `main`, open a PR, and have a green CI run start this job
+    # with HF_TOKEN in scope.
+    #
+    #   event == 'push'          a pull request can never deploy
+    #   head_repository == this  the trigger came from here, not from a fork
+    #
+    # The checkout below pins `main` from this repository for the same reason,
+    # so the thing deployed is never whatever a triggering run happened to be.
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success'
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
         with:
+          repository: ${{ github.repository }}
           ref: main
+          persist-credentials: false
 
       - uses: actions/setup-python@v5
         with:
