@@ -123,7 +123,13 @@ def test_every_asset_the_page_asks_for_is_packaged():
     from praman.api.main import STATIC_DIR
 
     html = (STATIC_DIR / "index.html").read_text(encoding="utf-8")
-    referenced = set(re.findall(r'(?:href|src)="/static/([^"]+)"', html))
+    # Relative paths, deliberately — see index.html. Anything absolute or
+    # external is not ours to package.
+    referenced = {
+        ref
+        for ref in re.findall(r'(?:href|src)="([^"]+)"', html)
+        if not ref.startswith(("/", "http", "data:"))
+    }
     assert referenced, "index.html references no assets at all"
 
     # The vendored fonts.css pulls the woff2 files in turn.

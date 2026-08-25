@@ -8,6 +8,7 @@ whole class of 3am failure.
 """
 
 import importlib
+import json
 
 import pytest
 from fastapi.testclient import TestClient
@@ -79,35 +80,30 @@ def test_an_unknown_campaign_is_a_404_not_a_crash(client):
     assert client.get("/api/campaign/nope").status_code == 404
 
 
-def test_replay_streams_a_summary_then_episodes_then_done(client):
+def test_a_campaign_carries_its_summary_and_every_episode(client):
+    """One response holds everything the arena draws.
+
+    This is what replaced the replay WebSocket. That socket read a file it had
+    already finished reading and sent it back with a sleep between the lines —
+    it carried no field this endpoint does not, so it was transporting delays
+    rather than data. Pacing is a `setTimeout` in arena.js now, which is also
+    what lets the arena deploy as static files.
+    """
     campaign_id = client.get("/api/campaigns").json()[0]["id"]
-    kinds = []
-    with client.websocket_connect(f"/ws/replay/{campaign_id}") as ws:
-        while True:
-            message = ws.receive_json()
-            kinds.append(message["type"])
-            if message["type"] == "done" or len(kinds) > 200:
-                break
+    body = client.get(f"/api/campaign/{campaign_id}").json()
 
-    assert kinds[0] == "summary"
-    assert kinds[-1] == "done"
-    assert "episode" in kinds
+    assert body["episodes"]
+    assert body["summary"]["episodes"] == len(body["episodes"])
+    assert {"asr", "benign_pass_rate", "rupees_moved"} <= set(body["summary"])
 
 
-def test_replayed_episodes_carry_the_chain_the_arena_draws(client):
+def test_episodes_carry_the_chain_the_arena_draws(client):
     campaign_id = client.get("/api/campaigns").json()[0]["id"]
-    with client.websocket_connect(f"/ws/replay/{campaign_id}") as ws:
-        ws.receive_json()  # summary
-        episode = ws.receive_json()["episode"]
+    episode = client.get(f"/api/campaign/{campaign_id}").json()["episodes"][0]
 
     snapshot = episode["snapshot"]
     assert snapshot is not None
     assert {"payment_beneficiary", "expected_beneficiary", "items"} <= set(snapshot)
-
-
-def test_replaying_an_unknown_campaign_reports_an_error_frame(client):
-    with client.websocket_connect("/ws/replay/nope") as ws:
-        assert ws.receive_json()["type"] == "error"
 
 
 def test_replay_mode_refuses_to_start_a_campaign(results, monkeypatch):
@@ -118,13 +114,119 @@ def test_replay_mode_refuses_to_start_a_campaign(results, monkeypatch):
 
 
 def test_the_arena_page_and_its_assets_are_served(client):
-    assert client.get("/").status_code == 200
+    """From the root, not /static.
+
+    The page references its own assets relatively so the identical files work
+    here and in the static export under a project path. Mounting at the root is
+    what makes those relative paths resolve.
+    """
+    index = client.get("/")
+    assert index.status_code == 200
+    assert "Praman Arena" in index.text
     for asset in ("arena.css", "arena.js", "components.js", "format.js"):
-        assert client.get(f"/static/{asset}").status_code == 200, asset
+        assert client.get(f"/{asset}").status_code == 200, asset
+
+
+def test_the_api_still_wins_against_a_root_mount(client):
+    """The arena is mounted greedily at /. Every API route must still match."""
+    assert client.get("/api/health").json()["status"] == "ok"
+    assert isinstance(client.get("/api/campaigns").json(), list)
 
 
 def test_vue_is_vendored_rather_than_fetched_from_a_cdn(client):
     """A demo that needs the internet is a demo that fails in the room."""
-    response = client.get("/static/vendor/vue.global.prod.js")
+    response = client.get("/vendor/vue.global.prod.js")
     assert response.status_code == 200
     assert len(response.content) > 100_000
+
+
+# -- the static export ------------------------------------------------------
+
+
+def test_the_export_answers_the_same_things_the_api_does(client, results, tmp_path):
+    """Same paths, same payloads — that is the whole contract.
+
+    The arena fetches relatively, so one frontend serves both this API at the
+    root and a static export under a project path. That only holds while the
+    export writes what the endpoints return, at the endpoints' own paths.
+    """
+    from praman.api.export import export
+
+    export(results=results, into=tmp_path / "dist")
+    dist = tmp_path / "dist"
+
+    served = client.get("/api/campaigns").json()
+    exported = json.loads((dist / "api" / "campaigns").read_text(encoding="utf-8"))
+    assert exported == served
+
+    for campaign in served:
+        path = dist / "api" / "campaign" / campaign["id"]
+        assert path.is_file(), f"{campaign['id']} is in the listing but not exported"
+        assert (
+            json.loads(path.read_text(encoding="utf-8"))
+            == client.get(f"/api/campaign/{campaign['id']}").json()
+        )
+
+
+def test_the_export_says_it_has_no_server(results, tmp_path):
+    """The masthead reads what is true. There is no mode to enforce here."""
+    from praman.api.export import export
+
+    export(results=results, into=tmp_path / "dist")
+    health = json.loads((tmp_path / "dist" / "api" / "health").read_text(encoding="utf-8"))
+    assert health["mode"] == "static"
+
+
+def test_the_export_carries_the_whole_frontend(results, tmp_path):
+    from praman.api.export import export
+
+    export(results=results, into=tmp_path / "dist")
+    dist = tmp_path / "dist"
+    for asset in (
+        "index.html",
+        "arena.js",
+        "arena.css",
+        "components.js",
+        "format.js",
+        "vendor/vue.global.prod.js",
+        "vendor/fonts.css",
+    ):
+        assert (dist / asset).is_file(), asset
+
+
+def test_the_export_references_nothing_absolute(results, tmp_path):
+    """An absolute path works at the root and 404s under /praman/.
+
+    This is the failure that a static host produces and a local server hides,
+    so it is asserted rather than discovered on the deployed URL.
+    """
+    import re
+
+    from praman.api.export import export
+
+    export(results=results, into=tmp_path / "dist")
+    dist = tmp_path / "dist"
+
+    html = (dist / "index.html").read_text(encoding="utf-8")
+    absolute = [r for r in re.findall(r'(?:href|src)="([^"]+)"', html) if r.startswith("/")]
+    assert not absolute, f"index.html references absolute paths: {absolute}"
+
+    js = (dist / "arena.js").read_text(encoding="utf-8")
+    assert not re.search(r'fetch\(\s*[`"\']/', js), "arena.js fetches an absolute path"
+
+
+def test_a_stale_campaign_does_not_survive_a_re_export(results, tmp_path):
+    """The export replaces its directory rather than merging into it.
+
+    A campaign deleted from results/ must not linger in a deploy as a row the
+    data no longer backs.
+    """
+    from praman.api.export import export
+
+    dist = tmp_path / "dist"
+    export(results=results, into=dist)
+    ghost = dist / "api" / "campaign" / "deleted-last-week"
+    ghost.write_text("{}", encoding="utf-8")
+
+    export(results=results, into=dist)
+    assert not ghost.exists()

@@ -95,7 +95,9 @@ const record = (name, ok, detail = "") => results.push({ name, ok, detail });
 
 // -- the rail lists every campaign -----------------------------------------
 const railCount = await evaluate(`document.querySelectorAll(".campaign").length`);
-const apiCount = await evaluate(`fetch("/api/campaigns").then(r=>r.json()).then(c=>c.length)`);
+// Relative, like the app itself: this same driver runs against the server at
+// the root and against a static export under a project path.
+const apiCount = await evaluate(`fetch("api/campaigns").then(r=>r.json()).then(c=>c.length)`);
 record("rail lists every campaign", railCount === apiCount, `${railCount} of ${apiCount}`);
 
 // -- clicking a campaign loads it ------------------------------------------
@@ -165,30 +167,31 @@ await shot("loaded");
 
 // -- replay ----------------------------------------------------------------
 await evaluate(`document.querySelector(".replay").click()`);
-await until(`document.querySelector(".link-state .text").textContent.trim() === "streaming"`, { what: "the replay socket to open" });
+await until(`document.querySelector(".link-state .text").textContent.trim() === "replaying"`, { what: "the replay to start" });
 await until(`document.querySelectorAll(".ep").length > 0`, { what: "the first replayed episode" });
-const streaming = await evaluate(`document.querySelector(".link-state .text").textContent.trim()`);
+const state = await evaluate(`document.querySelector(".link-state .text").textContent.trim()`);
 const midRows = await evaluate(`document.querySelectorAll(".ep").length`);
-record("replay opens the socket and streams", streaming === "streaming", streaming);
+record("replay announces itself and starts feeding", state === "replaying", state);
 record("replay starts from an empty feed", midRows < allRows, `${midRows} rows so far`);
 record(
   "replay disables its own button while running",
   await evaluate(`document.querySelector(".replay").disabled === true`)
 );
 // Let a few more land so the screenshot shows a replay in progress.
-await until(`document.querySelectorAll(".ep").length >= 4`, { what: "a few episodes to stream" });
+await until(`document.querySelectorAll(".ep").length >= 4`, { what: "a few episodes to arrive" });
 await shot("replaying");
 
-// -- switching campaigns mid-replay must stop the stream --------------------
+// -- switching campaigns mid-replay must abandon it -------------------------
 await evaluate(`document.querySelectorAll(".campaign")[0].click()`);
 await until(`document.querySelectorAll(".ep").length > 0`, { what: "the switched-to campaign to load" });
 const rowsA = await evaluate(`document.querySelectorAll(".ep").length`);
 // Deliberately wall-clock: the assertion IS that no more episodes arrive.
-// Several replay ticks (450ms each) have to pass with the count unmoved.
+// Several replay ticks (450ms each) must pass with the count unmoved. The
+// socket version leaked here — its connection outlived the switch.
 await wait(2500);
 const rowsB = await evaluate(`document.querySelectorAll(".ep").length`);
 record(
-  "switching campaigns mid-replay stops the old stream",
+  "switching campaigns mid-replay abandons it",
   rowsA === rowsB,
   `${rowsA} then ${rowsB} rows`
 );

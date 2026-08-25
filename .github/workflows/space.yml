@@ -1,9 +1,15 @@
 name: deploy to hugging face
 
-# The arena is deployed as the container this repo builds, unmodified. Hugging
-# Face runs a Dockerfile as-is, as UID 1000, with no credential and no card —
-# which is the whole reason it was chosen: the deployed thing is the tested
-# thing, not a variant of it.
+# The arena deploys as static files, not as a container.
+#
+# Docker Spaces moved behind PRO, and every remaining free tier that runs a
+# container sleeps — so a judge's first visit would wait on a cold start, on the
+# one day it matters. Static Spaces are free, and they do not sleep.
+#
+# Nothing was compromised to fit: `python -m praman export` writes what the
+# API's four endpoints already return, at the same paths, and the arena fetches
+# them relatively so the identical frontend serves both. The FastAPI server is
+# untouched and still the thing CI tests.
 #
 # Runs after CI, and only if CI passed. A red suite that deploys anyway is a
 # public URL that disagrees with its own badge.
@@ -28,13 +34,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # Full history: the Space is a git repo, and the work is worth seeing.
-          fetch-depth: 0
           ref: main
 
-      # Spaces are configured by YAML front matter in their README. Generating
-      # it here rather than committing it keeps GitHub's front page clean —
-      # GitHub renders front matter as a stray table above the title.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -e .
+
+      - name: build the arena
+        run: python -m praman export --out dist
+
+      # Spaces are configured by YAML front matter in their README. Generated
+      # here rather than committed: GitHub renders front matter as a stray
+      # table above the title, and the repo's front page is the first thing a
+      # judge reads.
       - name: give the space its front matter
         run: |
           {
@@ -43,15 +58,14 @@ jobs:
             echo 'emoji: 🛡️'
             echo 'colorFrom: red'
             echo 'colorTo: indigo'
-            echo 'sdk: docker'
-            echo 'app_port: 8000'
+            echo 'sdk: static'
+            echo 'app_file: index.html'
             echo 'pinned: false'
             echo 'short_description: Breach and attack simulation for agentic payment mandates'
             echo '---'
             echo
             cat README.md
-          } > README.space.md
-          mv README.space.md README.md
+          } > dist/README.md
 
       - name: push to the space
         env:
@@ -61,11 +75,14 @@ jobs:
             echo "::error::HF_TOKEN is not set — add it under Settings → Secrets → Actions"
             exit 1
           fi
+          cd dist
+          git init -q -b main
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add README.md
-          git commit -m "deploy ${GITHUB_SHA::7}"
-          # Force, because the Space's history is this workflow's output rather
-          # than a branch anyone commits to.
-          git push --force "https://oauth2:${HF_TOKEN}@huggingface.co/spaces/${SPACE}" HEAD:main
-          echo "::notice::deployed to https://huggingface.co/spaces/${SPACE}"
+          git add -A
+          git commit -q -m "deploy ${GITHUB_SHA::7}"
+          # A fresh history each time: the Space holds a build, not a branch
+          # anyone commits to, and a campaign deleted upstream must not survive
+          # in it as a row the data no longer backs.
+          git push --force "https://oauth2:${HF_TOKEN}@huggingface.co/spaces/${SPACE}" main
+          echo "::notice::deployed https://huggingface.co/spaces/${SPACE}"

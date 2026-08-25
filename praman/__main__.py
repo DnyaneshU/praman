@@ -21,6 +21,7 @@ COMMANDS = {
     "train": "Fit Tier 2 on Red's survivors and report what it learned",
     "matrix": "Generate every campaign the arena can show",
     "run": "Run a scenario: python -m praman run scenarios/<name>.yaml",
+    "export": "Write the arena as static files, for hosting anywhere",
     "models": "Attack success by victim model tier (needs Ollama)",
     "serve": "Start the arena at http://127.0.0.1:8000",
     "test": "Run the test suite",
@@ -83,6 +84,11 @@ def main(argv: list[str] | None = None) -> int:
         from praman.red.tiers_study import main as models_main
 
         return models_main(rest)
+
+    if args.command == "export":
+        from praman.api.export import main as export_main
+
+        return export_main(rest)
 
     if args.command == "serve":
         from praman.api.serve import main as serve_main

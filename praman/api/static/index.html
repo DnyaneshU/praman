@@ -6,12 +6,18 @@
 <title>Praman Arena</title>
 <meta name="description" content="Breach and attack simulation for agentic payment mandate controls.">
 
+<!-- Every path here is relative, and that is load-bearing. The same files are
+     served by FastAPI at the root and as a static export under a project path
+     like /praman/ — relative paths resolve correctly under both, so there is
+     one frontend rather than one per host. -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23090C11'/%3E%3Cpath d='M16 4l10 4v8c0 6-4 10-10 12C10 26 6 22 6 16V8z' fill='none' stroke='%23F05A72' stroke-width='2.5'/%3E%3C/svg%3E">
+
 <!-- Typefaces are vendored, not linked. Same reason as Vue below: the arena
      gets projected in a hall on whatever network happens to exist, and a font
      that falls back mid-presentation is a page that looks broken at the worst
      possible moment. Regenerate with scripts/fetch_fonts.py. -->
-<link rel="stylesheet" href="/static/vendor/fonts.css">
-<link rel="stylesheet" href="/static/arena.css">
+<link rel="stylesheet" href="vendor/fonts.css">
+<link rel="stylesheet" href="arena.css">
 </head>
 <body>
 
@@ -19,7 +25,7 @@
 
 <!-- Vue is vendored, not pulled from a CDN. A judge cloning the repo gets a
      working arena with no npm install and no network. -->
-<script src="/static/vendor/vue.global.prod.js"></script>
-<script type="module" src="/static/arena.js"></script>
+<script src="vendor/vue.global.prod.js"></script>
+<script type="module" src="arena.js"></script>
 </body>
 </html>

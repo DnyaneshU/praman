@@ -126,6 +126,7 @@ python -m praman serve        # the arena at http://127.0.0.1:8000
 | `python -m praman train` | fit Tier 2 on Red's survivors |
 | `python -m praman run <file>` | run a scenario |
 | `python -m praman serve` | the arena |
+| `python -m praman export` | write the arena as static files |
 | `python -m praman test` | the suite |
 
 Two environment variables, both optional: `PRAMAN_MODE` (`live` locally,
@@ -133,6 +134,20 @@ Two environment variables, both optional: `PRAMAN_MODE` (`live` locally,
 URL anyone can bill) and `PRAMAN_RESULTS` (where campaigns are read from).
 There is no `.env`, and **no API key anywhere** — the app imports and serves
 with no credential present, and a test asserts it.
+
+### The deployed arena has no server
+
+Every endpoint is a read over a committed file, so `python -m praman export`
+writes what they return — same paths, same payloads — and the whole arena
+becomes a directory you can host anywhere. The page fetches *relatively*, so
+one frontend serves both this server at the root and the export under a
+project path. There is no second code path and no build step.
+
+The replay used to be a WebSocket. It read a file it had already finished
+reading and sent it back with a sleep between the lines, carrying no field the
+campaign endpoint does not — so it was transporting delays rather than data,
+and how fast a human watches is a presentation choice. It is a `setTimeout`
+now, and the connection it used to drop mid-demo is gone with it.
 
 ## Adding a test case
 

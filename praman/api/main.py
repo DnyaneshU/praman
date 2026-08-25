@@ -1,14 +1,18 @@
-"""The arena's HTTP and WebSocket surface.
+"""The arena's HTTP surface.
+
+Four endpoints, all of them reads over committed files. `python -m praman
+export` writes exactly what they return as static JSON, so the same arena runs
+against this server locally and as static files when deployed — one frontend,
+one set of paths, no build-time branch.
 
 Two operating modes, and the difference is enforced rather than documented:
 
   live    local development. Campaigns can be started from the page.
-  replay  what is deployed. Committed campaign files are streamed back at demo
-          speed, no LLM is called, and no credential exists to be spent.
+  replay  no LLM is called and no credential exists to be spent.
 
 `PRAMAN_MODE=replay` is the deployed default. A public URL that can start
 campaigns is a public URL anyone can bill, and a full campaign takes minutes to
-watch — neither is what a judge with forty repos wants. Replaying committed
+watch — neither is what a judge with forty repos wants. Serving committed
 results makes the numbers reproducible by anyone with no credential at all,
 which is a stronger claim than a live demo, not a weaker one.
 
@@ -22,12 +26,11 @@ import logging
 import os
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 
 from praman import metrics
-from praman.api.replay import CampaignStore, stream_episodes
+from praman.api.replay import CampaignStore
 
 MODE = os.environ.get("PRAMAN_MODE", "live").lower()
 STATIC_DIR = Path(__file__).parent / "static"
@@ -64,23 +67,6 @@ def campaign(campaign_id: str) -> dict:
     }
 
 
-@app.websocket("/ws/replay/{campaign_id}")
-async def replay(websocket: WebSocket, campaign_id: str) -> None:
-    """Stream a committed campaign back, one episode at a time."""
-    await websocket.accept()
-    record = store.get(campaign_id)
-    if record is None:
-        await websocket.send_json({"type": "error", "detail": f"no campaign {campaign_id!r}"})
-        await websocket.close()
-        return
-
-    try:
-        await stream_episodes(websocket, record)
-    except WebSocketDisconnect:
-        # A viewer closing the tab mid-replay is normal, not an error.
-        return
-
-
 @app.post("/api/campaign/start")
 def start_campaign() -> dict:
     if MODE == "replay":
@@ -99,11 +85,11 @@ def start_campaign() -> dict:
 # is a packaging failure, so it says so: the assets are declared in
 # pyproject.toml under tool.setuptools.package-data.
 if STATIC_DIR.is_dir():
-    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
-
-    @app.get("/")
-    def index() -> FileResponse:
-        return FileResponse(STATIC_DIR / "index.html")
+    # Mounted at the root rather than at /static, so index.html can reference
+    # its own assets relatively. Those same relative paths then resolve under a
+    # static export served from a project path, which is what lets one frontend
+    # serve both. Declared last, so every /api route above wins the match.
+    app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="arena")
 
 else:  # pragma: no cover - only reachable from a broken install
     logging.getLogger(__name__).error(

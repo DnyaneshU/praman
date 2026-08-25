@@ -1,34 +1,31 @@
-"""Replaying a committed campaign at a speed a human can follow.
-
-A campaign runs in seconds; watching one is the point. Episodes stream with a
-pause between them and a longer one at each round boundary, because the story
-the arena tells is *round by round* — blocked, blocked, then through.
+"""Reading the committed campaigns the arena serves.
 
 Nothing here re-runs anything. The episodes are read from the JSONL committed
 in `results/`, which is why the deployed arena needs no credential and why a
-judge re-running the campaign locally gets the same numbers back.
+judge re-running a campaign locally gets the same numbers back.
+
+The paced replay used to live here, as a WebSocket that read a file it had
+already finished reading and sent it back with a sleep between the lines. It
+carried no field this module's `describe()` and the campaign endpoint do not,
+so it was transporting delays rather than data — and how fast a human watches
+is a presentation choice. It is a `setTimeout` in arena.js now, which also
+means the arena is a set of static files.
 """
 
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from fastapi import WebSocket
-
 from praman import metrics
 from praman.blue.defense import control_label
 from praman.red.episode import Episode, read_jsonl
 
-__all__ = ["CampaignStore", "CampaignRecord", "stream_episodes"]
+__all__ = ["CampaignStore", "CampaignRecord"]
 
 logger = logging.getLogger(__name__)
-
-EPISODE_DELAY = 0.45
-ROUND_DELAY = 1.2
 
 
 def _read_meta(path: Path) -> dict:
@@ -150,26 +147,3 @@ class CampaignStore:
         if not episodes:
             return None
         return CampaignRecord(id=path.stem, path=path, episodes=episodes, meta=_read_meta(path))
-
-
-async def stream_episodes(websocket: WebSocket, record: CampaignRecord) -> None:
-    """Send the summary, then each episode, pausing at round boundaries."""
-    await websocket.send_json(
-        {
-            "type": "summary",
-            "campaign": record.describe(),
-            "summary": metrics.summarise(record.episodes),
-        }
-    )
-
-    previous_round: int | None = None
-    for episode in record.episodes:
-        if previous_round is not None and episode.round != previous_round:
-            await websocket.send_json({"type": "round", "round": episode.round})
-            await asyncio.sleep(ROUND_DELAY)
-        previous_round = episode.round
-
-        await websocket.send_json({"type": "episode", "episode": episode.model_dump(mode="json")})
-        await asyncio.sleep(EPISODE_DELAY)
-
-    await websocket.send_json({"type": "done"})
