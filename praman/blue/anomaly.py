@@ -1,6 +1,6 @@
 """Tier 2 — a model trained on whatever got past Tier 1.
 
-This is the loop closing. Session 4's search found that the way past the
+This is the loop closing. The mutation search found that the way past the
 invariant gate is to *satisfy* it: reissue the cart from a merchant the
 attacker operates, and the chain becomes structurally impeccable. No arithmetic
 can object, because the only thing wrong with it is a reputation score.

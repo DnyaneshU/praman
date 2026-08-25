@@ -6,8 +6,8 @@ argument: they are model-independent (a perfectly aligned agent is just as
 vulnerable) and they succeeded against every model tier in the published study.
 
 Each of the four breaks a different link, so each is caught by a different
-invariant in Session 3. If two attacks were stopped by the same check, one of
-them would be measuring nothing.
+invariant. If two attacks were stopped by the same check, one of them would be
+measuring nothing.
 
     S-01  intent -> cart     cart contents do not serve the stated intent
     S-02  cart -> payment    money leaves for someone who did not issue the cart

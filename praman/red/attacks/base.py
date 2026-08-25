@@ -1,8 +1,8 @@
 """The Attack interface and its registry.
 
 An attack takes an honest, signed mandate chain and returns a tampered one.
-That is the entire contract — which is what lets the mutator in Session 4 treat
-attacks as things to recombine rather than scripts to replay.
+That is the entire contract — which is what lets the mutator treat attacks as
+things to recombine rather than as scripts to replay.
 
 Two rules every attack in this package follows:
 

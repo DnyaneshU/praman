@@ -18,9 +18,10 @@ dist/
 *.sqlite
 keys/
 
-# node
-arena/node_modules/
-arena/dist/
+# editor and tooling
+.vscode/
+.idea/
+.claude/
 
 # os
 Thumbs.db

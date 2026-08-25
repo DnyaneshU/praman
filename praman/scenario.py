@@ -51,9 +51,7 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field
 
 from praman import metrics
-from praman.blue.anomaly import AnomalyTier
-from praman.blue.defense import Defense
-from praman.blue.training import MODEL_PATH
+from praman.blue.defense import build_defense, control_label
 from praman.console import setup as console_setup
 from praman.money import fmt
 from praman.range.catalog import FIXTURES_DIR, Catalog
@@ -337,19 +335,10 @@ def prepared_range(scenario: Scenario) -> Iterator[Path]:
         yield directory
 
 
-def _defense(tiers: list[int]) -> Defense | None:
-    if not tiers:
-        return None
-    anomaly = AnomalyTier()
-    if 2 in tiers and MODEL_PATH.exists():
-        anomaly.load(MODEL_PATH)
-    return Defense(tiers=tuple(tiers), anomaly=anomaly)
-
-
 def run(scenario: Scenario, *, out_dir: Path | str = Path("results")) -> list[Episode]:
     """Run the scenario and write its campaign where the arena will find it."""
     out_dir = Path(out_dir)
-    defense = _defense(scenario.control)
+    defense = build_defense(scenario.control)
 
     with prepared_range(scenario) as fixtures:
         if scenario.adaptive:
@@ -393,13 +382,8 @@ def report(scenario: Scenario, episodes: list[Episode], out: Path) -> None:
     if scenario.description:
         print(f"  {scenario.description}")
 
-    control = (
-        "undefended"
-        if not scenario.control
-        else "Tier " + "+".join(str(t) for t in scenario.control)
-    )
     print(f"\n  rail                 {scenario.rail}")
-    print(f"  control              {control}")
+    print(f"  control              {control_label(scenario.control)}")
     print(f"  rounds               {scenario.rounds}")
     print(f"  seed                 {scenario.seed}")
 

@@ -27,7 +27,7 @@ import argparse
 from pathlib import Path
 
 from praman import metrics
-from praman.blue.defense import Defense
+from praman.blue.defense import Defense, control_label
 from praman.console import setup as console_setup
 from praman.money import fmt
 from praman.range.agent import ScriptedAgent
@@ -156,7 +156,7 @@ def main(argv: list[str] | None = None) -> int:
     tiers = () if args.tiers.lower() == "none" else tuple(int(t) for t in args.tiers.split(","))
 
     print(RULE)
-    control = "undefended" if not tiers else "Tier " + "+".join(map(str, tiers))
+    control = control_label(tiers)
     print(f"PRAMAN  ·  VICTIM MODEL STUDY  ·  {control}  ·  seed {args.seed}")
     print(RULE)
 

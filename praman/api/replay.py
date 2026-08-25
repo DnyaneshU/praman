@@ -20,6 +20,7 @@ from pathlib import Path
 from fastapi import WebSocket
 
 from praman import metrics
+from praman.blue.defense import control_label
 from praman.red.episode import Episode, read_jsonl
 
 __all__ = ["CampaignStore", "CampaignRecord", "stream_episodes"]
@@ -28,13 +29,6 @@ logger = logging.getLogger(__name__)
 
 EPISODE_DELAY = 0.45
 ROUND_DELAY = 1.2
-
-
-def _label(tiers: list[int]) -> str:
-    """How a control configuration reads in the arena's picker."""
-    if not tiers:
-        return "undefended"
-    return "Tier " + "+".join(str(t) for t in tiers)
 
 
 def _read_meta(path: Path) -> dict:
@@ -91,7 +85,7 @@ class CampaignRecord:
             "rail": first.rail_profile,
             "rail_name": RAILS.get(first.rail_profile, first.rail_profile),
             "tiers": tiers,
-            "label": _label(tiers),
+            "label": control_label(tiers),
             # The headline numbers, so selecting a campaign fills the scoreboard
             # before anything streams. A page of em-dashes waiting on a replay
             # reads as broken rather than as ready.
@@ -106,7 +100,7 @@ class CampaignRecord:
 
     @staticmethod
     def _name(rail: str, tiers: list[int], adaptive: bool) -> str:
-        control = _label(tiers)
+        control = control_label(tiers)
         return f"{RAILS.get(rail, rail)} · {control}" + (" · adaptive" if adaptive else "")
 
 

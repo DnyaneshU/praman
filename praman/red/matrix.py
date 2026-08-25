@@ -17,9 +17,7 @@ import argparse
 from pathlib import Path
 
 from praman import metrics
-from praman.blue.anomaly import AnomalyTier
-from praman.blue.defense import Defense
-from praman.blue.training import MODEL_PATH
+from praman.blue.defense import build_defense
 from praman.console import setup as console_setup
 from praman.money import fmt
 from praman.red.campaign import run_adaptive_campaign
@@ -35,30 +33,20 @@ CONTROLS: tuple[tuple[str, tuple[int, ...]], ...] = (
 )
 
 
-def _defense(tiers: tuple[int, ...]) -> Defense | None:
-    """Build the control, loading the trained Tier 2 when the config asks for it."""
-    if not tiers:
-        return None
-    anomaly = AnomalyTier()
-    if 2 in tiers and MODEL_PATH.exists():
-        anomaly.load(MODEL_PATH)
-    return Defense(tiers=tiers, anomaly=anomaly)
-
-
 def build(*, seed: int, repeats: int, rounds: int, out: Path) -> list[tuple[str, list[Episode]]]:
     written: list[tuple[str, list[Episode]]] = []
 
     for rail in RAILS:
         for label, tiers in CONTROLS:
             episodes = run_campaign(
-                seed=seed, repeats=repeats, profile=rail, defense=_defense(tiers)
+                seed=seed, repeats=repeats, profile=rail, defense=build_defense(tiers)
             )
             name = f"{rail}-{label}"
             write_jsonl(episodes, out / f"{name}.jsonl")
             written.append((name, episodes))
 
         adaptive = run_adaptive_campaign(
-            rounds=rounds, seed=seed, profile=rail, defense=_defense((1,))
+            rounds=rounds, seed=seed, profile=rail, defense=build_defense((1,))
         )
         name = f"{rail}-adaptive"
         write_jsonl(adaptive.episodes, out / f"{name}.jsonl")

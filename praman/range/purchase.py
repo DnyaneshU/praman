@@ -1,6 +1,6 @@
 """Building an honest mandate chain, and settling one.
 
-This is the path everything else deviates from. Session 2's victim agent calls
+This is the path everything else deviates from. The victim agent calls
 `build_chain`; every attack in the corpus takes the chain it produces and
 tampers with exactly one link.
 """
@@ -79,8 +79,10 @@ def build_chain(intent: IntentMandate, product: Product, ctx: RangeContext) -> M
 def settle_chain(chain: MandateChain, ctx: RangeContext) -> SettlementResult:
     """Settle straight to the ledger, with no control in the way.
 
-    Session 3 routes this through the out-of-band monitor instead. Until then,
-    this is the undefended baseline every attack is measured against.
+    The undefended baseline every attack is measured against. With a control
+    attached, the executor routes settlement through the out-of-band monitor
+    instead, and the ledger refuses anything unmediated — so this path is only
+    ever reached deliberately.
     """
     return ctx.ledger.settle(chain.payment, source=ctx.principal)
 

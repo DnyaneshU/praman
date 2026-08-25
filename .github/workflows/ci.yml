@@ -1,0 +1,65 @@
+name: ci
+
+# The suite is the claim. A submission whose numbers cannot be re-derived by
+# someone else is a slide deck, so the build that proves they can is the one
+# thing that has to stay green.
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      # The arena has no build step, but its templates are still compiled and
+      # its helpers still asserted — see tests/frontend/. Node is here for that
+      # and nothing else; there is no package.json to install.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - run: pip install -e ".[dev]"
+
+      - name: lint
+        run: python -m praman lint
+
+      - name: test
+        run: python -m pytest
+
+      # Reproducibility is a claim the repo makes out loud, so it is checked
+      # rather than asserted: the same seed on a machine that is not ours has
+      # to produce the same campaign.
+      - name: the committed numbers reproduce
+        run: python -m praman campaign --seed 1729 --repeats 4 --tiers 1
+
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: docker build -t praman .
+
+      # The deployment's two load-bearing properties. Both have failed before:
+      # an app that needs a credential it will not have, and a live endpoint on
+      # a public URL that anyone could bill.
+      - name: it serves with no credential, and cannot start a campaign
+        run: |
+          docker run -d --name praman -p 8000:8000 praman
+          for _ in $(seq 30); do
+            curl -sf http://127.0.0.1:8000/api/health && break || sleep 1
+          done
+          curl -sf http://127.0.0.1:8000/api/health | grep -q '"mode":"replay"'
+          curl -s -o /dev/null -w '%{http_code}' \
+            -X POST http://127.0.0.1:8000/api/campaign/start | grep -q 403
+          test -z "$(docker exec praman printenv ANTHROPIC_API_KEY || true)"
+          curl -sf http://127.0.0.1:8000/ | grep -q "Praman Arena"
+          docker rm -f praman

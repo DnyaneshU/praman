@@ -12,15 +12,22 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Tier 2 only. Kept out of the base install so the container carries neither —
+# the deployed arena replays committed results and never fits a model.
+#
+# sentence-transformers was declared here and never imported: Tier 3 runs a
+# lexicon, not an embedding model. It was pulling torch for nothing.
 ml = [
     "lightgbm>=4.5",
-    "shap>=0.46",
-    "sentence-transformers>=3.2",
+    "numpy>=1.26",
 ]
 dev = [
     "pytest>=8.3",
     "ruff>=0.7",
     "httpx>=0.27",
+    # The suite trains Tier 2, so a dev install has to be able to.
+    "lightgbm>=4.5",
+    "numpy>=1.26",
 ]
 
 [build-system]

@@ -1,6 +1,6 @@
 """`make demo` — an honest purchase, settled end to end.
 
-Session 1's gate. No agent model, no attack, no defense: just a signed chain
+The simplest thing that has to work. No model, no attack, no defense: a signed chain
 that settles and a ledger that balances. Everything built later is a deviation
 from this path, so it has to be right first.
 """

@@ -1,7 +1,7 @@
 """Every structural attack must succeed against an undefended range.
 
 This is the single most important test file in the project right now. If an
-attack cannot take money when nothing is stopping it, then Session 3's defense
+attack cannot take money when nothing is stopping it, then the defense
 proves nothing about that attack, and every number we report for it is
 meaningless. A regression here invalidates results rather than breaking a
 feature.

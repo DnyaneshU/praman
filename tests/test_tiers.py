@@ -45,7 +45,7 @@ def trained(training_set) -> AnomalyTier:
 
 
 def test_a_tier_that_learned_from_red_beats_one_that_did_not(trained):
-    """Session 5's gate. Tier 2 trains on the attacks Tier 1 let through."""
+    """The loop, as an assertion: Tier 2 trains on what Tier 1 let through."""
     tier1 = run_adaptive_campaign(rounds=4, seed=1729, defense=Defense(tiers=(1,)))
     learned = run_adaptive_campaign(
         rounds=4, seed=1729, defense=Defense(tiers=(1, 2), anomaly=trained)

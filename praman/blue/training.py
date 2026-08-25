@@ -14,14 +14,12 @@ from __future__ import annotations
 from pathlib import Path
 
 from praman.blue.anomaly import AnomalyTier, TrainingReport
-from praman.blue.defense import Defense
+from praman.blue.defense import MODEL_PATH, Defense
 from praman.red.campaign import run_adaptive_campaign
 from praman.red.episode import Episode
 from praman.red.executor import run_episode
 
 __all__ = ["gather_training_set", "train_tier2", "MODEL_PATH"]
-
-MODEL_PATH = Path("results/tier2.lgb")
 
 
 TRAINING_TASKS = ("task-shoes", "task-trainer", "task-budget", "task-premium")

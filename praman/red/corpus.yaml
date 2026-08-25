@@ -59,7 +59,11 @@
   mechanism: >
     Authentication valid, authorisation scope unenforced; cumulative spend
     exceeds the delegated cap.
-  caught_by: inv-08
+  caught_by: none
+  note: >
+    Every invariant is per-chain. Catching this needs cumulative accounting
+    across mandates against a delegated cap, which nothing here implements —
+    so it names no rule rather than naming one that does not exist.
 
 - id: S-06
   name: Nonce reuse / TTL bypass

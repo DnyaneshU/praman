@@ -11,8 +11,10 @@ every episode records which model ran it and rates are reported per tier.
 Structural attacks succeed against all of them, which is the finding that
 argues the fix belongs at the control layer rather than the model layer.
 
-`ScriptedAgent` is the default and needs no credential. The LLM-backed agent
-arrives in Session 5 and changes only which tier is being measured.
+`ScriptedAgent` is the default and needs no credential: it is the control
+showing what the corpus does when there is no judgement to subvert at all.
+`OllamaAgent` puts a real model in the same seat, locally served, and changes
+only which tier is being measured — see `python -m praman models`.
 """
 
 from __future__ import annotations

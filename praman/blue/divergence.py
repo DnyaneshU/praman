@@ -3,7 +3,7 @@
 The residual after Tier 1 and Tier 2: every rule satisfied, the statistics
 unremarkable, and the action still not the one the principal wanted.
 
-Session 4's search produced exactly one attack of that shape that survives a
+The mutation search produced exactly one attack of that shape that survives a
 strengthened Tier 1. `mut-relabel` files a gift voucher under "footwear" so
 inv-01's arithmetic agrees — the category is a field the attacker writes, and
 the product name is not. The two disagreeing is the tell.

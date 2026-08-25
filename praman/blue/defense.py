@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import time
 from collections.abc import Sequence
+from pathlib import Path
 
 from praman.blue.anomaly import AnomalyTier
 from praman.blue.divergence import DivergenceTier
@@ -28,7 +29,15 @@ from praman.blue.verdict import Verdict
 from praman.range.context import RangeContext
 from praman.range.mandates import MandateChain
 
-__all__ = ["Defense"]
+__all__ = ["Defense", "build_defense", "control_label", "MODEL_PATH"]
+
+MODEL_PATH = Path("results/tier2.lgb")
+"""Where the fitted Tier 2 model lives.
+
+Here rather than in `training.py` because this is the module that *loads* it,
+and `training.py` imports this one — putting the constant beside the trainer
+made every caller that only wanted to build a control import the trainer too.
+"""
 
 
 class Defense:
@@ -90,3 +99,29 @@ class Defense:
             if not verdict.allowed:
                 return verdict
         return Verdict.allow()
+
+
+def build_defense(tiers: Sequence[int]) -> Defense | None:
+    """The control a campaign runs behind, or None for the baseline.
+
+    Every entry point needs this and each had grown its own copy. The Tier 2
+    load is the part worth having in one place: a campaign that asks for tier 2
+    and silently gets an untrained model reports a defense that is not the one
+    named in the result.
+    """
+    tiers = tuple(tiers)
+    if not tiers:
+        return None
+    anomaly = AnomalyTier()
+    if 2 in tiers and MODEL_PATH.exists():
+        anomaly.load(MODEL_PATH)
+    return Defense(tiers=tiers, anomaly=anomaly)
+
+
+def control_label(tiers: Sequence[int]) -> str:
+    """How a control configuration reads — in the arena, and in every report.
+
+    One spelling, because these strings are compared by eye across a CLI table
+    and a web page during a demo.
+    """
+    return "Tier " + "+".join(str(t) for t in tiers) if tiers else "undefended"

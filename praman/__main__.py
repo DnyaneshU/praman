@@ -93,9 +93,10 @@ def main(argv: list[str] | None = None) -> int:
         return subprocess.call([sys.executable, "-m", "pytest", *rest])
 
     if args.command == "lint":
+        targets = ["praman", "tests", "scripts"]
         checks = [
-            [sys.executable, "-m", "ruff", "check", "praman", "tests"],
-            [sys.executable, "-m", "ruff", "format", "--check", "praman", "tests"],
+            [sys.executable, "-m", "ruff", "check", *targets],
+            [sys.executable, "-m", "ruff", "format", "--check", *targets],
         ]
         return max(subprocess.call(cmd) for cmd in checks)
 
