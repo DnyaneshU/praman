@@ -29,7 +29,7 @@ from praman.range.context import RangeContext
 from praman.range.mandates import MandateChain
 from praman.range.purchase import settle_chain
 from praman.red.attacks.base import Attack
-from praman.red.episode import Episode
+from praman.red.episode import ChainSnapshot, Episode
 
 __all__ = ["run_episode", "BENIGN"]
 
@@ -113,6 +113,7 @@ def run_episode(
                     ),
                 },
                 detail=_detail(attack, mediations, evidence),
+                snapshot=_snapshot(chains[-1], ctx),
             )
         finally:
             ctx.ledger.close()
@@ -144,6 +145,23 @@ def _settle_all(
 
     with ThreadPoolExecutor(max_workers=len(chains)) as pool:
         return list(pool.map(settle, chains))
+
+
+def _snapshot(chain: MandateChain, ctx: RangeContext) -> ChainSnapshot:
+    """Freeze what the arena needs to draw, from the chain actually under test."""
+    cart = chain.cart
+    merchant = ctx.catalog.merchants.get(cart.merchant_id)
+    return ChainSnapshot(
+        intent_description=chain.intent.description,
+        intent_ceiling=chain.intent.max_amount,
+        cart_merchant=cart.merchant_id,
+        cart_total=cart.total,
+        display_summary=cart.display_summary,
+        items=[(i.name, i.price * i.qty, i.visible) for i in cart.items],
+        payment_beneficiary=chain.payment.beneficiary,
+        payment_amount=chain.payment.amount,
+        expected_beneficiary=merchant.vpa if merchant else "unknown",
+    )
 
 
 def _detail(

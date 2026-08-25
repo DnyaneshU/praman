@@ -21,13 +21,38 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-__all__ = ["Episode", "Outcome", "write_jsonl", "read_jsonl"]
+__all__ = ["Episode", "ChainSnapshot", "Outcome", "write_jsonl", "read_jsonl"]
 
 Outcome = Literal["allow", "block", "refusal", "error"]
 """allow  — the attack reached the ledger (whether or not money moved)
 block   — a control stopped it, and named why
 refusal — the attacker model declined to produce the variant; not a defense
 error   — the harness itself failed; excluded from every rate"""
+
+
+class ChainSnapshot(BaseModel):
+    """Just enough of the chain for the arena to draw it.
+
+    The arena's centrepiece is the mandate chain with the tampered link struck
+    through, so an episode has to carry what was actually signed — not a
+    reference to a range that no longer exists. Kept flat and small: campaign
+    files are committed to the repo and replayed by the deployed app, and a
+    full chain per episode would bloat them for no gain.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    intent_description: str
+    intent_ceiling: Decimal
+    cart_merchant: str
+    cart_total: Decimal
+    display_summary: str
+    items: list[tuple[str, Decimal, bool]]
+    """(name, price, visible) — visibility is what M-09 manipulates."""
+    payment_beneficiary: str
+    payment_amount: Decimal
+    expected_beneficiary: str
+    """The VPA that should have received it, so the UI can show the mismatch."""
 
 
 class Episode(BaseModel):
@@ -62,6 +87,7 @@ class Episode(BaseModel):
 
     latency_ms: dict[str, float] = Field(default_factory=dict)
     detail: str | None = None
+    snapshot: ChainSnapshot | None = None
     timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     @property
