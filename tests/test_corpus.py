@@ -14,8 +14,22 @@ def test_corpus_matches_registry():
     )
 
 
-def test_corpus_has_all_fourteen_seeds():
-    assert len(load_corpus()) == 14
+def test_the_map_covers_every_surface():
+    """Breadth is the claim; this is the claim asserted.
+
+    An attack map that only covers the protocol layer is a map of the protocol
+    layer. Each surface must carry at least two entries, so no category is
+    represented by a single token vector.
+    """
+    from collections import Counter
+
+    from praman.red.corpus import SURFACES
+
+    counts = Counter(s.surface for s in load_corpus())
+    assert set(counts) <= set(SURFACES), f"undeclared surface: {set(counts) - set(SURFACES)}"
+    thin = {s: n for s, n in counts.items() if n < 2}
+    assert not thin, f"surfaces with a single entry: {thin}"
+    assert set(counts) == set(SURFACES), f"unmapped surfaces: {set(SURFACES) - set(counts)}"
 
 
 def test_no_seed_points_at_a_rule_that_does_not_exist():
@@ -58,13 +72,13 @@ def test_unimplemented_seeds_have_no_attack_behind_them():
             assert seed.id not in ATTACKS
 
 
-def test_i14_is_documented_as_the_honest_limit():
-    """I-14 is deliberately unbuildable at the mandate layer, and says so.
+def test_the_coerced_principal_is_documented_as_the_honest_limit():
+    """I-31 is deliberately unbuildable at the mandate layer, and says so.
 
     Every signature verifies and the money is gone anyway, because the fraud is
     upstream of the mandate. Presenting that boundary is the point.
     """
-    i14 = next(s for s in load_corpus() if s.id == "I-14")
-    assert i14.implemented is False
-    assert i14.caught_by == "none"
-    assert i14.note
+    coerced = next(s for s in load_corpus() if s.id == "I-31")
+    assert coerced.implemented is False
+    assert coerced.caught_by == "none"
+    assert coerced.note

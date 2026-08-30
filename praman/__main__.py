@@ -19,6 +19,9 @@ COMMANDS = {
     "campaign": "Run a single-round campaign, baseline beside defended",
     "adapt": "Run the adaptive campaign — the static vs adaptive gap",
     "train": "Fit Tier 2 on Red's survivors and report what it learned",
+    "corpus": "The attack surface map, and what is built of it",
+    "walkthrough": "Build the solution walkthrough .docx from live results",
+    "detect": "Precision, recall, F1 and AUC over every committed campaign",
     "matrix": "Generate every campaign the arena can show",
     "run": "Run a scenario: python -m praman run scenarios/<name>.yaml",
     "export": "Write the arena as static files, for hosting anywhere",
@@ -69,6 +72,21 @@ def main(argv: list[str] | None = None) -> int:
         from praman.blue.train_cli import main as train_main
 
         return train_main(rest)
+
+    if args.command == "walkthrough":
+        from praman.report.walkthrough import main as walkthrough_main
+
+        return walkthrough_main(rest)
+
+    if args.command == "corpus":
+        from praman.red.corpus_report import main as corpus_main
+
+        return corpus_main(rest)
+
+    if args.command == "detect":
+        from praman.blue.detect_report import main as detect_main
+
+        return detect_main(rest)
 
     if args.command == "matrix":
         from praman.red.matrix import main as matrix_main

@@ -4,12 +4,13 @@ The agent holds signing authority for payments on the user's behalf. That is
 what "agentic payment" means, and it is why a manipulated agent produces a
 chain in which *every signature verifies* and the money is still gone.
 
-The model behind the agent is a **variable, not a constant**. Semantic
-susceptibility is heavily model-dependent — cost-optimised models sat at
-99-100% in the published 1,440-trial study, alignment-trained ones at 0% — so
-every episode records which model ran it and rates are reported per tier.
-Structural attacks succeed against all of them, which is the finding that
-argues the fix belongs at the control layer rather than the model layer.
+The model behind the agent is a **variable, not a constant**, so every
+episode records which model ran it and rates are reported per model rather
+than pooled. That is not a hedge: we measured it. Against M-08, mistral is
+fully susceptible and qwen2.5:1.5b and llama3.2:3b are not, while every
+structural attack succeeds against all of them at the same rate — which is the
+finding that argues the fix belongs at the control layer rather than the model
+layer. `python -m praman models` reproduces the table.
 
 `ScriptedAgent` is the default and needs no credential: it is the control
 showing what the corpus does when there is no judgement to subvert at all.

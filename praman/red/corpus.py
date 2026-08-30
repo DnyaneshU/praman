@@ -13,7 +13,19 @@ from pathlib import Path
 import yaml
 from pydantic import BaseModel, ConfigDict, Field
 
-__all__ = ["Seed", "load_corpus", "CORPUS_PATH"]
+__all__ = ["Seed", "load_corpus", "CORPUS_PATH", "SURFACES"]
+
+SURFACES = (
+    "mandate-chain",
+    "upi-rail",
+    "card-rail",
+    "agent-protocol",
+    "agent-judgement",
+    "social",
+    "laundering",
+)
+"""Declared here so a typo becomes a test failure rather than a
+silently-new category of one."""
 
 CORPUS_PATH = Path(__file__).with_name("corpus.yaml")
 
@@ -24,6 +36,13 @@ class Seed(BaseModel):
     id: str
     name: str
     attack_class: str = Field(alias="class")
+    surface: str
+    """Where in the payment stack this lives — see corpus.yaml's header.
+
+    The point of the field is breadth. An attack map that covers one layer is
+    a map of one layer, however deep it goes, and `surface` is what makes that
+    visible instead of leaving it to be inferred from the ids.
+    """
     root_cause: str
     implemented: bool
     mechanism: str

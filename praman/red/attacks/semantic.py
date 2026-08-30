@@ -10,9 +10,9 @@ break the mandate arithmetic to move money, so a deterministic control catches
 some of them without reading a word of the payload. That is the argument for
 putting the fix at the control layer rather than hoping for a better model.
 
-Susceptibility is model-dependent — cost-optimised models sat at 99-100% in the
-published study, alignment-trained ones at 0% — so these run against an agent
-whose susceptibility is an explicit, recorded setting rather than an accident.
+Susceptibility is model-dependent, and our own model study measures how much —
+so these run against an agent whose susceptibility is an explicit, recorded
+setting rather than an accident.
 """
 
 from __future__ import annotations

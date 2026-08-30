@@ -37,10 +37,29 @@ Testing tools for this do not exist. Cymulate, AttackIQ and Picus simulate
 attacks against networks and endpoints. Nobody simulates attacks against a
 mandate.
 
+The six above are the ones **built and measured**. They sit inside a map of
+**34 vectors across 7 surfaces** of the payment stack — the protocol itself,
+India's rails, card rails, agent-to-agent trust, the agent's judgement, GenAI
+social engineering, and laundering. `python -m praman corpus` prints it.
+
+| surface | what it attacks | mapped | built |
+|---|---|---:|---:|
+| mandate-chain | the signed Intent → Cart → Payment protocol | 8 | 4 |
+| upi-rail | UPI, Autopay, AePS, BBPS, e-RUPI | 7 | 0 |
+| card-rail | tokenisation, 3DS, merchant-initiated transactions | 3 | 0 |
+| agent-protocol | agent-to-agent trust, delegation, tool supply chain | 4 | 0 |
+| agent-judgement | subverting what the model decides to do | 6 | 2 |
+| social | GenAI social engineering against the human | 4 | 0 |
+| laundering | moving the proceeds once the payment succeeds | 2 | 0 |
+
+**Mapped is not built, and the two are never added together.** Identification
+is research; implementation is evidence. A test fails the build if the corpus
+and the code ever disagree, or if any entry names a rule that does not exist.
+
 ## What Praman is
 
 A **range** (a signed mandate chain, a catalogue, and a SQLite ledger that is
-the sole authority on harm), a **red team** (six implemented attacks plus a
+the sole authority on harm), a **red team** (six built attacks plus a
 deterministic mutation search that adapts to refusals), a **blue team** (three
 tiers of control, running out-of-band as a reference monitor), and an **arena**
 that replays any of it in a browser.
@@ -86,6 +105,32 @@ stops. A control that holds against a documented attack list and folds in one
 round against an attacker that reads its rejection messages is not a control
 that has been tested.
 
+**As a detection model** (`python -m praman detect`). Attacks are the positive
+class; a flag is the control naming a rule or escalating:
+
+| control | precision | recall | F1 | false positives | ASR |
+|---|---:|---:|---:|---:|---:|
+| undefended | 0.000 | 0.000 | 0.000 | 0.000 | 100.0% |
+| Tier 1 | 1.000 | 1.000 | 1.000 | 0.000 | 16.7% |
+| Tier 1+2+3 | 1.000 | 1.000 | 1.000 | 0.000 | 0.0% |
+| Tier 1 · adaptive | 1.000 | 0.529 | 0.692 | 0.000 | 41.2% |
+
+Tier 2's AUC over the campaigns it judges is **0.917**. Only the learned tier
+emits a score, so only it has an AUC — quoting one for a deterministic rule
+would be dressing a rule up as a model.
+
+**Read the first two rows together: precision 1.000, recall 1.000, F1 1.000 —
+and ₹3,996 still reached the attacker.** That is S-03's race: three concurrent
+redemptions against one authorisation, two refused, one settled. Every one of
+those episodes is a true positive by decision and a success by ledger.
+**Detection is not prevention**, and a submission reporting only F1 would show
+a perfect classifier over a system losing money. Both columns are printed
+side by side, always — in live payments a flag that arrives after settlement is
+a chargeback, not a defense.
+
+Under adaptation, recall falls from **1.000 in round 0 to 0.000 in round 2**.
+The variants the search finds are not caught late. They are not caught.
+
 **Attack success by victim model** (`python -m praman models`, local Ollama):
 
 | victim model | M-08 | M-09 | S-01 | S-02 | S-03 | S-04 |
@@ -121,12 +166,15 @@ python -m praman serve        # the arena at http://127.0.0.1:8000
 | `python -m praman demo` | one honest purchase, settled end to end |
 | `python -m praman campaign` | a campaign, baseline beside defended |
 | `python -m praman adapt` | the adaptive loop — the static-vs-adaptive gap |
+| `python -m praman corpus` | the attack surface map, and what is built of it |
+| `python -m praman detect` | precision, recall, F1 and AUC per campaign |
 | `python -m praman matrix` | regenerate every campaign the arena shows |
 | `python -m praman models` | attack success by victim model (needs Ollama) |
 | `python -m praman train` | fit Tier 2 on Red's survivors |
 | `python -m praman run <file>` | run a scenario |
 | `python -m praman serve` | the arena |
 | `python -m praman export` | write the arena as static files |
+| `python -m praman walkthrough` | build the solution document from live results |
 | `python -m praman test` | the suite |
 
 Two environment variables, both optional: `PRAMAN_MODE` (`live` locally,
@@ -222,7 +270,7 @@ are excluded by name.
 
 ## What this does not do
 
-**I-14 — coerced-principal intent — is deliberately unbuildable here.** The
+**I-31 — coerced-principal intent — is deliberately unbuildable here.** The
 mandate is authentic, the human signed it under duress, every cryptographic
 check passes and the money is gone anyway, because the fraud is upstream of the
 mandate. It is documented in `praman/red/corpus.yaml` and marked
@@ -230,9 +278,16 @@ mandate. It is documented in `praman/red/corpus.yaml` and marked
 the industry is currently betting on is more useful than pretending not to have
 one.
 
-I-14 is one of **eight** techniques among the fourteen documented that are
-marked `implemented: false`. None of them are ever reported as results, and a
-test fails the build if that file and the attack registry disagree.
+I-31 is one of the **28** mapped vectors marked `implemented: false`. None are
+ever reported as results, and a test fails the build if that file and the
+attack registry disagree. Sixteen of them name no rule at all, and each says
+why — those notes are where the range's own boundaries are recorded rather
+than hidden.
+
+Three of them — S-05, I-22 and D-33 — fail for want of the *same* missing
+control: cumulative accounting across mandates against a delegated cap. Three
+independent attack paths converging on one gap is the clearest signal in the
+map for what to build next, and finding that is what a map is for.
 
 **Tier 2 is honest about its ceiling.** It catches 52/52 in-sample with 0 false
 positives in 72, and **0%** against either held-out merchant it was not trained

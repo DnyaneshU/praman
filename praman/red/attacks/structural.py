@@ -2,8 +2,9 @@
 
 Structural attacks break the *relationships* between mandates while every
 signature still verifies. That is what makes them the strongest part of the
-argument: they are model-independent (a perfectly aligned agent is just as
-vulnerable) and they succeeded against every model tier in the published study.
+argument: they are model-independent — a perfectly aligned agent is just as
+vulnerable — and our own model study confirms it, with every structural attack
+landing against all four victims at the same rate.
 
 Each of the four breaks a different link, so each is caught by a different
 invariant. If two attacks were stopped by the same check, one of them would be

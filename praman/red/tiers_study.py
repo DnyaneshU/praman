@@ -1,9 +1,9 @@
 """`python -m praman models` — attack success by victim model tier.
 
 The scoreboard has always had a row for this and it has always been blank.
-Praman cited the published finding — cost-optimised models at 99-100% semantic
-susceptibility, alignment-trained ones at 0% — rather than measuring anything.
-This runs the corpus against real models and reports our own numbers.
+Susceptibility to semantic attack is widely held to be model-dependent; this
+runs the corpus against real models and reports our own numbers rather than
+repeating anyone else's.
 
 The result worth reading is not any single model's rate. It is the *contrast*:
 

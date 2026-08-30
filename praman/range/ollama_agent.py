@@ -1,10 +1,9 @@
 """A real language model as the victim, served locally by Ollama.
 
-Susceptibility to semantic attack is heavily model-dependent — the published
-1,440-trial study puts cost-optimised models at 99-100% and alignment-trained
-ones at 0% — and until now Praman cited that finding rather than measuring it.
-This agent turns "ASR by victim model tier" from a blank row on the scoreboard
-into our own result.
+Susceptibility to semantic attack is model-dependent, and this agent is how
+we measure that rather than assert it. It turns "ASR by victim model" from a
+blank row on the scoreboard into our own number, produced on hardware anyone
+can rent for nothing.
 
 **Local, not hosted, and that is the point.** Ollama needs no token, no rate
 limit and no network, so the tier study reproduces on a judge's laptop and
