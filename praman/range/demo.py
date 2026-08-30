@@ -12,18 +12,20 @@ import tempfile
 from decimal import Decimal
 from pathlib import Path
 
+from praman.console import banner, field, rule
 from praman.console import setup as console_setup
 from praman.money import fmt
+from praman.range.agent import ScriptedAgent
 from praman.range.context import RangeContext
 from praman.range.mandates import MandateChain
-from praman.range.purchase import build_chain, choose_product, settle_chain
+from praman.range.purchase import settle_chain
 from praman.range.signing import Keyring
 
-RULE = "─" * 68
+RULE = rule()
 
 
 def _line(label: str, value: str) -> None:
-    print(f"  {label:<22} {value}")
+    field(label, value, width=23)
 
 
 def _show_chain(chain: MandateChain, keyring: Keyring, principal: str) -> None:
@@ -71,17 +73,25 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _run(ctx: RangeContext, args) -> int:
-    print(RULE)
-    print(f"PRAMAN RANGE  ·  profile: {ctx.profile.name}  ·  seed: {ctx.seed}")
-    print(f"              {ctx.profile.description}")
-    print(RULE)
+    banner(
+        "RANGE",
+        f"profile: {ctx.profile.name}",
+        f"seed: {ctx.seed}",
+        note=ctx.profile.description,
+    )
 
     task = ctx.catalog.task(args.task)
-    product = choose_product(task, ctx)
-    print(f'\nTASK     "{task.description}"')
-    _line("agent picked", f"{product.name} ({product.sku}) at {fmt(product.price)}")
+    # Through the agent, not by assembling the chain here. This demo used to
+    # reimplement `shop()` and had drifted out of step with it — it passed the
+    # task where an intent is required, so the honest path, the first command
+    # in the README, raised AttributeError. Whatever the campaigns run is what
+    # this shows, because it is the same call.
+    chain = ScriptedAgent().shop(task, ctx)
+    item = chain.cart.items[0]
 
-    chain = build_chain(task, product, ctx)
+    print(f'\nTASK     "{task.description}"')
+    _line("agent picked", f"{item.name} ({item.sku}) at {fmt(item.price)}")
+
     _show_chain(chain, ctx.keyring, ctx.principal)
 
     before = ctx.ledger.snapshot()

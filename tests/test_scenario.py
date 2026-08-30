@@ -14,7 +14,6 @@ which order pytest happened to pick.
 from __future__ import annotations
 
 import json
-import sys
 
 import pytest
 import yaml
@@ -33,19 +32,6 @@ MINIMAL = {
     "tasks": ["task-shoes"],
     "attacks": ["S-02"],
 }
-
-
-@pytest.fixture(autouse=True)
-def isolated_registry():
-    """Scenario attacks join the global corpus. Put it back afterwards."""
-    before = dict(ATTACKS)
-    modules = set(sys.modules)
-    yield
-    ATTACKS.clear()
-    ATTACKS.update(before)
-    for name in set(sys.modules) - modules:
-        if name.startswith("praman_scenario_attacks_"):
-            del sys.modules[name]
 
 
 def write(tmp_path, **overrides):
