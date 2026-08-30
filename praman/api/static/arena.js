@@ -1,4 +1,4 @@
-/* The arena's root component: campaign selection, the replay socket, state.
+/* The arena's root component: campaign selection, replay, state.
  *
  * Vue 3 Composition API against the vendored global build. No build step, no
  * node_modules, no committed bundle — `git clone` then run the server, and the
@@ -9,6 +9,19 @@
  * run. `python -m praman matrix` generates the shipped grid and
  * `python -m praman run <scenario.yaml>` adds to it; both land in `results/`
  * and both appear in the rail without anything here knowing the difference.
+ *
+ * -- on how little of this is reactive ------------------------------------
+ *
+ * A campaign is a file that was written once and will not change. Handing it
+ * to `ref()` made Vue walk every episode and wrap it, its snapshot, its items
+ * and its latency map in Proxies — thousands of them, to track mutations that
+ * never come. Worse, the replay appended with `episodes.value = [...episodes
+ * .value, e]`, so each of a hundred ticks rebuilt the array and invalidated
+ * every pane that read it.
+ *
+ * So the episodes live in a `shallowRef`, frozen, and the replay advances a
+ * single integer. What is on screen is a computed slice of data Vue never
+ * looks inside. The reactive surface of a running replay is one number.
  */
 
 import {
@@ -20,8 +33,9 @@ import {
   MetricBand,
   VerdictPanel,
 } from "./components.js";
+import { asr } from "./format.js";
 
-const { createApp, computed, onMounted, onBeforeUnmount, ref, watch } = Vue;
+const { createApp, computed, onMounted, onBeforeUnmount, ref, shallowRef, watch } = Vue;
 
 // The speed a room can follow. These were praman/api/replay.py's EPISODE_DELAY
 // and ROUND_DELAY; the longer pause at a round boundary is what makes the
@@ -41,19 +55,44 @@ const App = {
   },
 
   setup() {
-    const campaigns = ref([]);
-    const selected = ref(null);
+    const campaigns = shallowRef([]);
+    const selected = shallowRef(null);
 
     const mode = ref("—");
-    const link = ref({ text: "idle", state: "" });
-    const episodes = ref([]);
-    const summary = ref(null);
+    const link = shallowRef({ text: "idle", state: "" });
     const running = ref(false);
     const roundFilter = ref(null);
 
+    /** The campaign being shown: `{ id, summary, episodes }`, frozen.
+     *
+     * Shallow on purpose — see the note at the top of the file. Nothing in
+     * here is ever written to, so there is nothing for Vue to track.
+     */
+    const loaded = shallowRef(null);
+
+    /** How many of its episodes the replay has reached.
+     *
+     * This is the whole of the replay's state. Selecting a campaign sets it to
+     * every episode at once; pressing Replay walks it up from zero.
+     */
+    const visible = ref(0);
+
     // Null until the viewer clicks. While it stays null the panes follow the
     // stream; once they choose an episode, the view stops moving under them.
-    const picked = ref(null);
+    const picked = shallowRef(null);
+
+    /** Fetched campaigns, kept for the session.
+     *
+     * A plain Map, deliberately outside Vue: it is a cache, not state anything
+     * renders. Replay used to re-fetch a campaign already on screen — a second
+     * round trip for bytes we were holding — so pressing it now costs nothing
+     * and starts on the same frame.
+     */
+    const cache = new Map();
+
+    const episodes = computed(() =>
+      loaded.value ? loaded.value.episodes.slice(0, visible.value) : []
+    );
 
     /** Rounds this campaign has, from the campaign itself.
      *
@@ -66,14 +105,47 @@ const App = {
     );
 
     /** Rounds actually on screen. Filtering to one that has not been reached
-     *  yet would empty the feed and read as a broken button. */
-    const arrived = computed(() => new Set(episodes.value.map((e) => e.round)));
+     *  yet would empty the feed and read as a broken button.
+     *
+     *  Episodes are written in round order, so the last one that has arrived
+     *  names the high-water mark and this costs a walk of the rounds rather
+     *  than of every episode. */
+    const arrived = computed(() => {
+      const last = episodes.value.at(-1);
+      return new Set(last === undefined ? [] : rounds.value.filter((r) => r <= last.round));
+    });
 
     const shown = computed(() =>
       roundFilter.value === null
         ? episodes.value
         : episodes.value.filter((e) => e.round === roundFilter.value)
     );
+
+    /** Attack success per round, over the whole campaign.
+     *
+     * Computed once when a campaign loads rather than once per episode: the
+     * numbers come from a file that is already complete, and recomputing them
+     * on every tick of the replay was arithmetic over the same rows a hundred
+     * times to arrive at the same answer.
+     */
+    const series = computed(() => {
+      if (!loaded.value) return [];
+      const byRound = new Map();
+      for (const episode of loaded.value.episodes) {
+        if (episode.attack_id === "benign") continue;
+        if (!byRound.has(episode.round)) byRound.set(episode.round, []);
+        byRound.get(episode.round).push(episode);
+      }
+      return [...byRound.keys()]
+        .sort((a, b) => a - b)
+        .map((round) => ({ round, rate: asr(byRound.get(round)) }));
+    });
+
+    /** The part of that curve the replay has reached. */
+    const curve = computed(() => {
+      const last = episodes.value.at(-1);
+      return last === undefined ? [] : series.value.filter((p) => p.round <= last.round);
+    });
 
     /** What the chain and verdict panes describe.
      *
@@ -90,17 +162,9 @@ const App = {
       return through.at(-1) ?? shown.value.at(-1) ?? null;
     });
 
-    function reset() {
-      episodes.value = [];
-      summary.value = null;
-      picked.value = null;
-      roundFilter.value = null;
-      running.value = false;
-    }
-
     const setLink = (text, state = "") => (link.value = { text, state });
 
-    // One token guards both loading and replaying. A viewer clicking through
+    // One token guards loading and replaying alike. A viewer clicking through
     // the rail faster than the network answers, or switching campaigns
     // mid-replay, must not have the previous campaign's episodes land on top
     // of the new selection — which is exactly the bug the WebSocket version
@@ -109,10 +173,25 @@ const App = {
 
     const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+    /** Fetch a campaign once, then serve it from memory.
+     *
+     * Frozen on arrival: it says the data is read-only, and it lets Vue skip
+     * the object entirely if one ever reaches a deep `ref`.
+     */
     async function fetchCampaign(id) {
+      const held = cache.get(id);
+      if (held) return held;
+
       // Relative, so the same build works under the API at / and as static
       // files under a project path like /praman/.
-      return fetch(`api/campaign/${id}`).then((r) => r.json());
+      const body = await fetch(`api/campaign/${id}`).then((r) => r.json());
+      const frozen = Object.freeze({
+        id,
+        summary: Object.freeze(body.summary),
+        episodes: Object.freeze(body.episodes.map(Object.freeze)),
+      });
+      cache.set(id, frozen);
+      return frozen;
     }
 
     /** Load a campaign whole, without the paced replay.
@@ -129,8 +208,8 @@ const App = {
       try {
         const body = await fetchCampaign(campaign.id);
         if (token !== generation) return;
-        episodes.value = body.episodes;
-        summary.value = body.summary;
+        loaded.value = body;
+        visible.value = body.episodes.length;
         setLink("loaded");
       } catch {
         if (token === generation) setLink("could not load the campaign", "fault");
@@ -139,10 +218,15 @@ const App = {
 
     async function load() {
       try {
-        const health = await fetch("api/health").then((r) => r.json());
+        // Both at once. Asked in series, the arena waited out two round trips
+        // before it could draw anything, and neither answer needs the other.
+        const [health, list] = await Promise.all([
+          fetch("api/health").then((r) => r.json()),
+          fetch("api/campaigns").then((r) => r.json()),
+        ]);
         mode.value = health.mode;
-        campaigns.value = await fetch("api/campaigns").then((r) => r.json());
-        selected.value = campaigns.value.find((c) => c.adaptive) ?? campaigns.value[0] ?? null;
+        campaigns.value = Object.freeze(list);
+        selected.value = list.find((c) => c.adaptive) ?? list[0] ?? null;
         if (selected.value) await open(selected.value);
       } catch {
         setLink("could not reach the campaign data", "fault");
@@ -152,10 +236,14 @@ const App = {
     function select(campaign) {
       if (campaign.id === selected.value?.id) return;
       // Bumping the token here is load-bearing: it abandons an in-flight load
-      // and stops a running replay, so neither can append to the list the new
-      // selection has just cleared.
+      // and stops a running replay, so neither can advance a campaign the new
+      // selection has just replaced.
       generation++;
-      reset();
+      running.value = false;
+      picked.value = null;
+      roundFilter.value = null;
+      loaded.value = null;
+      visible.value = 0;
       selected.value = campaign;
       open(campaign);
     }
@@ -167,12 +255,14 @@ const App = {
      * and doing it over a socket bought a connection to drop, four handlers to
      * keep consistent, and a lifecycle bug — for delays a `setTimeout` gives
      * for free. It also makes the whole arena deployable as static files.
+     *
+     * Each tick moves one integer. Nothing is copied, nothing is re-proxied,
+     * and the panes recompute from a slice of data that never changes.
      */
     async function replay() {
       if (!selected.value) return;
       const token = ++generation;
 
-      setLink("loading");
       let body;
       try {
         body = await fetchCampaign(selected.value.id);
@@ -182,17 +272,18 @@ const App = {
       }
       if (token !== generation) return;
 
-      reset();
+      loaded.value = body;
+      visible.value = 0;
+      picked.value = null;
+      roundFilter.value = null;
       running.value = true;
-      summary.value = body.summary;
       setLink("replaying", "live");
 
-      let previous = null;
-      for (const episode of body.episodes) {
+      const all = body.episodes;
+      for (let i = 0; i < all.length; i++) {
         if (token !== generation) return;
-        if (previous !== null && episode.round !== previous) await pause(ROUND_DELAY);
-        previous = episode.round;
-        episodes.value = [...episodes.value, episode];
+        if (i > 0 && all[i].round !== all[i - 1].round) await pause(ROUND_DELAY);
+        visible.value = i + 1;
         await pause(EPISODE_DELAY);
       }
 
@@ -216,12 +307,12 @@ const App = {
       selected,
       mode,
       link,
-      episodes,
       shown,
-      summary,
+      summary: computed(() => loaded.value?.summary ?? null),
       running,
       picked,
       current,
+      curve,
       rounds,
       arrived,
       roundFilter,
@@ -268,7 +359,7 @@ const App = {
                       @select="pick" @update:round="roundFilter = $event"/>
           <MandateChain :episode="current"/>
           <VerdictPanel :episode="current"/>
-          <AsrCurve :episodes="episodes"/>
+          <AsrCurve :series="curve"/>
         </div>
       </main>
     </div>

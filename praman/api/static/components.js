@@ -16,7 +16,7 @@
  * struck through with its correct value beside it.
  */
 
-import { asr, classify, outcomeLabel, percent, rupees, signed } from "./format.js";
+import { classify, outcomeLabel, percent, rupees, signed } from "./format.js";
 
 const { computed, ref, watch, nextTick } = Vue;
 
@@ -491,20 +491,18 @@ export const VerdictPanel = {
 /* -- curve ----------------------------------------------------------------- */
 
 export const AsrCurve = {
-  props: { episodes: Array },
+  /* `series` is `[{ round, rate }]`, computed by the parent when a campaign
+   * loads. It used to be derived here from the episode list, which meant
+   * re-running the ASR arithmetic over the same rows on every tick of a
+   * replay to arrive at the same numbers. The curve draws; it does not
+   * measure. */
+  props: { series: { type: Array, default: () => [] } },
   setup(props) {
     const W = 760;
     const H = 176;
     const pad = { l: 54, r: 30, t: 20, b: 26 };
 
-    const series = computed(() => {
-      const attacks = props.episodes.filter((e) => e.attack_id !== "benign");
-      const rounds = [...new Set(attacks.map((e) => e.round))].sort((a, b) => a - b);
-      return rounds.map((round) => ({
-        round,
-        rate: asr(attacks.filter((e) => e.round === round)),
-      }));
-    });
+    const series = computed(() => props.series);
 
     const x = (i) => pad.l + (i * (W - pad.l - pad.r)) / Math.max(series.value.length - 1, 1);
     const y = (v) => pad.t + (1 - v) * (H - pad.t - pad.b);
