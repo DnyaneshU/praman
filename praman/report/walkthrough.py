@@ -39,6 +39,7 @@ from praman.red.corpus_report import HEADINGS, by_surface
 
 __all__ = ["build"]
 
+TEAM = "AIZEN"
 REPO = "https://github.com/DnyaneshU/praman"
 ARENA = "https://huggingface.co/spaces/DnyaneshU/praman"
 
@@ -172,12 +173,15 @@ def build(*, results: Path, out: Path) -> Path:
         size=10.5,
         color=MUTED,
     )
+    # In the generator rather than typed into the .docx afterwards, so it
+    # survives every rebuild — the document is regenerated on demand and a
+    # hand-edit to the cover would be lost the first time anyone did that.
+    para(f"Team {TEAM}", align=centre, bold=True, size=11.5)
     para(
         f"Prepared {date.today():%d %B %Y}\nSource code: {REPO}\nWorking prototype: {ARENA}",
         align=centre,
         size=10,
     )
-    para("Team: ______________________________________", align=centre, size=10, color=MUTED)
 
     para()
     para(

@@ -182,3 +182,17 @@ def test_the_opening_figures_are_the_harnesss_figures(document):
         == f"{metrics.asr(store['autopay-undefended'].episodes):.1%}"
     )
     assert str(len(load_corpus())) in values["Attack vectors mapped"]
+
+
+@needs_docx
+def test_the_cover_names_the_team(document):
+    """It lives in the generator, so a rebuild cannot drop it.
+
+    Typed into the .docx instead, it would survive exactly until the next
+    `python -m praman walkthrough` — which is a command the document itself
+    tells the reader to run.
+    """
+    from praman.report.walkthrough import TEAM
+
+    cover = " ".join(p.text for p in document.paragraphs[:12])
+    assert TEAM in cover, "the cover does not name the team"
