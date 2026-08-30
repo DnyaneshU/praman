@@ -52,6 +52,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from praman import metrics
 from praman.blue.defense import build_defense, control_label
+from praman.console import Table, banner, field, summary
 from praman.console import setup as console_setup
 from praman.money import fmt
 from praman.range.catalog import FIXTURES_DIR, Catalog
@@ -63,7 +64,6 @@ from praman.red.runner import run_campaign
 
 __all__ = ["Scenario", "RangeOverlay", "ScenarioError", "load", "run", "prepared_range"]
 
-RULE = "─" * 76
 FIXTURE_FILES = ("merchants.yaml", "products.yaml", "tasks.yaml")
 
 
@@ -375,29 +375,32 @@ def run(scenario: Scenario, *, out_dir: Path | str = Path("results")) -> list[Ep
 def report(scenario: Scenario, episodes: list[Episode], out: Path) -> None:
     attacked = [e for e in episodes if e.attack_id != "benign"]
 
-    print(RULE)
-    print(f"PRAMAN  ·  SCENARIO  ·  {scenario.id}")
-    print(RULE)
+    banner("SCENARIO", scenario.id)
     print(f"\n  {scenario.name}")
     if scenario.description:
         print(f"  {scenario.description}")
 
-    print(f"\n  rail                 {scenario.rail}")
-    print(f"  control              {control_label(scenario.control)}")
-    print(f"  rounds               {scenario.rounds}")
-    print(f"  seed                 {scenario.seed}")
+    print()
+    field("rail", scenario.rail)
+    field("control", control_label(scenario.control))
+    field("rounds", scenario.rounds)
+    field("seed", scenario.seed)
 
-    print(f"\n  {'attack':<10} {'ASR':>7} {'moved':>14}")
-    print(f"  {'-' * 10} {'-' * 7} {'-' * 14}")
+    print()
+    table = Table(("attack", 10), ("ASR", 7, ">"), ("moved", 14, ">"))
+    table.head()
     for attack_id, rate in sorted(metrics.asr_by_attack(attacked).items()):
         rows = [e for e in attacked if e.attack_id == attack_id]
-        print(f"  {attack_id:<10} {rate:>6.0%} {fmt(metrics.rupees_moved(rows)):>14}")
+        table.row(attack_id, f"{rate:.0%}", fmt(metrics.rupees_moved(rows)))
 
-    print(f"\n  {'-' * 74}")
-    print(f"  ASR                  {metrics.asr(episodes):.1%}")
-    print(f"  moved                {fmt(metrics.rupees_moved(episodes))}")
-    print(f"  benign pass rate     {metrics.benign_pass_rate(episodes):.1%}")
-    print(f"  episodes             {len(episodes)}")
+    summary(
+        [
+            ("ASR", f"{metrics.asr(episodes):.1%}"),
+            ("moved", fmt(metrics.rupees_moved(episodes))),
+            ("benign pass rate", f"{metrics.benign_pass_rate(episodes):.1%}"),
+            ("episodes", len(episodes)),
+        ]
+    )
     print(f"\n  wrote {out}")
     print("  it is in the arena now — reload the page and pick it from the sidebar\n")
 

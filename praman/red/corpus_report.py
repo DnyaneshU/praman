@@ -23,10 +23,9 @@ import argparse
 from collections import Counter, defaultdict
 from pathlib import Path
 
+from praman.console import banner, divider, field
 from praman.console import setup as console_setup
 from praman.red.corpus import CORPUS_PATH, SURFACES, Seed, load_corpus
-
-RULE = "─" * 78
 
 HEADINGS = {
     "mandate-chain": "The signed Intent -> Cart -> Payment protocol itself",
@@ -69,10 +68,10 @@ def _summary(seeds: list[Seed]) -> None:
     surfaces = Counter(s.surface for s in seeds)
     causes = Counter(s.root_cause for s in seeds)
 
-    print(f"\n  {'-' * 76}")
-    print(f"  mapped                 {len(seeds)} vectors across {len(surfaces)} surfaces")
-    print(f"  built and measured     {len(built)}")
-    print(f"  root causes covered    {', '.join(sorted(causes))}")
+    divider()
+    field("mapped", f"{len(seeds)} vectors across {len(surfaces)} surfaces", width=23)
+    field("built and measured", len(built), width=23)
+    field("root causes covered", ", ".join(sorted(causes)), width=23)
 
     # The map is wider than the harness on purpose, and saying which is which
     # is what keeps the first number from inflating the second.
@@ -99,9 +98,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     console_setup()
 
-    print(RULE)
-    print("PRAMAN  ·  ATTACK SURFACE MAP")
-    print(RULE)
+    banner("ATTACK SURFACE MAP")
 
     report(load_corpus(args.path))
     print()

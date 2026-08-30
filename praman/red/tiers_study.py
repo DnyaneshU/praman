@@ -28,6 +28,7 @@ from pathlib import Path
 
 from praman import metrics
 from praman.blue.defense import Defense, control_label
+from praman.console import Table, banner, divider
 from praman.console import setup as console_setup
 from praman.money import fmt
 from praman.range.agent import ScriptedAgent
@@ -35,8 +36,6 @@ from praman.range.ollama_agent import OllamaAgent
 from praman.red.attacks import ATTACKS
 from praman.red.episode import Episode, write_jsonl
 from praman.red.executor import run_episode
-
-RULE = "─" * 78
 
 DEFAULT_MODELS = ("qwen2.5:1.5b", "llama3.2:3b", "mistral:latest")
 TASKS = ("task-shoes", "task-trainer")
@@ -94,18 +93,29 @@ def report(results: dict[str, list[Episode]]) -> None:
     averaging the two together hides exactly the number worth reporting.
     """
     ids = sorted(ATTACKS)
-    header = "".join(f"{a:>8}" for a in ids)
-    print(f"\n  {'victim model':<18}{header}{'moved':>13}{'refused':>9}{'err':>5}")
-    print(f"  {'-' * 18}{'-' * len(header)}{'-' * 13}{'-' * 9}{'-' * 5}")
-
+    print()
+    # One column per attack, declared once. The heading row used to be written
+    # `>13` over a `>12` data cell and only looked right because a neighbouring
+    # cell carried a trailing space; a Table cannot drift that way.
+    table = Table(
+        ("victim model", 18),
+        *((attack_id, 8, ">") for attack_id in ids),
+        ("moved", 13, ">"),
+        ("refused", 9, ">"),
+        ("err", 5, ">"),
+        gap=0,
+    )
+    table.head()
     for label, episodes in results.items():
-        cells = "".join(f"{metrics.asr(_for_attack(episodes, a)):>7.0%} " for a in ids)
-        refused = sum(e.outcome == "refusal" for e in episodes)
-        errors = sum(e.outcome == "error" for e in episodes)
-        moved = fmt(metrics.rupees_moved(episodes))
-        print(f"  {label:<18}{cells}{moved:>12}{refused:>9}{errors:>5}")
+        table.row(
+            label,
+            *(f"{metrics.asr(_for_attack(episodes, a)):.0%}" for a in ids),
+            fmt(metrics.rupees_moved(episodes)),
+            sum(e.outcome == "refusal" for e in episodes),
+            sum(e.outcome == "error" for e in episodes),
+        )
 
-    print(f"\n  {'-' * 76}")
+    divider()
     _interpret(results)
 
 
@@ -155,10 +165,7 @@ def main(argv: list[str] | None = None) -> int:
     models = tuple(m.strip() for m in args.models.split(",") if m.strip())
     tiers = () if args.tiers.lower() == "none" else tuple(int(t) for t in args.tiers.split(","))
 
-    print(RULE)
-    control = control_label(tiers)
-    print(f"PRAMAN  ·  VICTIM MODEL STUDY  ·  {control}  ·  seed {args.seed}")
-    print(RULE)
+    banner("VICTIM MODEL STUDY", control_label(tiers), f"seed {args.seed}")
 
     results = run_study(models=models, seed=args.seed, repeats=args.repeats, tiers=tiers)
     report(results)

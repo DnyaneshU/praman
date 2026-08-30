@@ -18,13 +18,13 @@ from pathlib import Path
 
 from praman import metrics
 from praman.blue.defense import build_defense
+from praman.console import Table, banner
 from praman.console import setup as console_setup
 from praman.money import fmt
 from praman.red.campaign import run_adaptive_campaign
 from praman.red.episode import Episode, write_jsonl
 from praman.red.runner import run_campaign
 
-RULE = "─" * 76
 RAILS = ("autopay", "uap")
 CONTROLS: tuple[tuple[str, tuple[int, ...]], ...] = (
     ("undefended", ()),
@@ -64,19 +64,26 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     console_setup()
 
-    print(RULE)
-    print(f"PRAMAN  ·  CAMPAIGN MATRIX  ·  seed {args.seed}")
-    print(RULE)
-    print(f"\n  {'campaign':<22} {'episodes':>9} {'ASR':>7} {'moved':>14} {'benign':>8}")
-    print(f"  {'-' * 22} {'-' * 9} {'-' * 7} {'-' * 14} {'-' * 8}")
+    banner("CAMPAIGN MATRIX", f"seed {args.seed}")
+    print()
 
+    table = Table(
+        ("campaign", 22),
+        ("episodes", 9, ">"),
+        ("ASR", 7, ">"),
+        ("moved", 14, ">"),
+        ("benign", 8, ">"),
+    )
+    table.head()
     for name, episodes in build(
         seed=args.seed, repeats=args.repeats, rounds=args.rounds, out=args.out
     ):
-        print(
-            f"  {name:<22} {len(episodes):>9} {metrics.asr(episodes):>6.0%} "
-            f"{fmt(metrics.rupees_moved(episodes)):>14} "
-            f"{metrics.benign_pass_rate(episodes):>7.0%}"
+        table.row(
+            name,
+            len(episodes),
+            f"{metrics.asr(episodes):.0%}",
+            fmt(metrics.rupees_moved(episodes)),
+            f"{metrics.benign_pass_rate(episodes):.0%}",
         )
 
     print(f"\n  wrote to {args.out}\n")

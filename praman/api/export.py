@@ -40,11 +40,10 @@ from pathlib import Path
 from praman import metrics
 from praman.api.main import STATIC_DIR
 from praman.api.replay import CampaignStore
+from praman.console import banner, field
 from praman.console import setup as console_setup
 
 __all__ = ["export"]
-
-RULE = "─" * 76
 
 
 def export(*, results: Path, into: Path) -> list[str]:
@@ -96,21 +95,21 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     console_setup()
 
-    print(RULE)
-    print("PRAMAN  ·  STATIC EXPORT")
-    print(RULE)
+    banner("STATIC EXPORT")
 
     ids = export(results=args.results, into=args.out)
     if not ids:
         print(f"\n  no campaigns in {args.results} — run `python -m praman matrix` first\n")
         return 1
 
-    total = sum(f.stat().st_size for f in args.out.rglob("*") if f.is_file())
-    print(f"\n  campaigns   {len(ids)}")
+    files = [f for f in args.out.rglob("*") if f.is_file()]
+    print()
+    field("campaigns", len(ids), width=12)
     for campaign_id in ids:
-        print(f"                {campaign_id}")
-    print(f"\n  files       {sum(1 for f in args.out.rglob('*') if f.is_file())}")
-    print(f"  size        {total / 1024:.0f} KB")
+        field("", campaign_id, width=12)
+    print()
+    field("files", len(files), width=12)
+    field("size", f"{sum(f.stat().st_size for f in files) / 1024:.0f} KB", width=12)
     print(f"\n  wrote {args.out}")
     print("  serve it from anywhere: no server, no credential, no cold start\n")
     return 0

@@ -15,9 +15,8 @@ from __future__ import annotations
 import argparse
 
 from praman.blue.training import MODEL_PATH, evaluate_holdout, gather_training_set, train_tier2
+from praman.console import banner, field
 from praman.console import setup as console_setup
-
-RULE = "─" * 76
 
 HOLDOUTS = (
     (0.42, "mule merchant — new, unrated, unsigned listings"),
@@ -34,20 +33,19 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     console_setup()
 
-    print(RULE)
-    print("PRAMAN  ·  TIER 2 TRAINING  ·  fitted on the attacks Tier 1 let through")
-    print(RULE)
+    banner("TIER 2 TRAINING", "fitted on the attacks Tier 1 let through")
 
     tier, report = train_tier2(
         rounds=args.rounds, seed=args.seed, replicates=args.replicates, save_to=MODEL_PATH
     )
     episodes = gather_training_set(rounds=args.rounds, seed=args.seed, replicates=args.replicates)
 
-    print(f"\n  rows                 {report.rows}  ({report.positives} moved money)")
+    print()
+    field("rows", f"{report.rows}  ({report.positives} moved money)")
     print("\n  feature gains")
     for name, gain in sorted(report.importances.items(), key=lambda kv: -kv[1]):
         marker = "" if gain else "   (unused)"
-        print(f"    {name:<26} {gain:>8.1f}{marker}")
+        field(name, f"{gain:>8.1f}{marker}", width=27, indent=4)
 
     flagged = sum(not tier.check(e.features).allowed for e in episodes if e.succeeded)
     attacks = sum(e.succeeded for e in episodes)
@@ -55,8 +53,8 @@ def main(argv: list[str] | None = None) -> int:
     benign = sum(not e.succeeded for e in episodes)
 
     print("\n  in-sample")
-    print(f"    caught               {flagged}/{attacks}")
-    print(f"    false positives      {false_positives}/{benign}")
+    field("caught", f"{flagged}/{attacks}", indent=4)
+    field("false positives", f"{false_positives}/{benign}", indent=4)
 
     if not args.skip_holdout:
         print("\n  held out — the model never saw this merchant during training")
@@ -70,7 +68,9 @@ def main(argv: list[str] | None = None) -> int:
                 f"   recall {result['recall']:.0%}"
             )
 
-    print(f"\n  saved to             {MODEL_PATH}\n")
+    print()
+    field("saved to", MODEL_PATH)
+    print()
     return 0
 
 

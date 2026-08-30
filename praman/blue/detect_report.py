@@ -33,11 +33,10 @@ from praman import metrics
 from praman.api.replay import CampaignStore
 from praman.blue.anomaly import AnomalyTier
 from praman.blue.defense import MODEL_PATH, control_label
+from praman.console import Table, banner, divider, field
 from praman.console import setup as console_setup
 from praman.money import fmt
 from praman.red.episode import Episode
-
-RULE = "─" * 78
 
 
 def tier2_auc(episodes: list[Episode]) -> float | None:
@@ -60,16 +59,27 @@ def report(store: CampaignStore) -> int:
     if not records:
         return 1
 
-    print(f"\n  {'campaign':<22} {'control':<12} {'P':>6} {'R':>6} {'F1':>6} {'FPR':>6} {'ASR':>7}")
-    print(f"  {'-' * 22} {'-' * 12} {'-' * 6} {'-' * 6} {'-' * 6} {'-' * 6} {'-' * 7}")
-
+    print()
+    table = Table(
+        ("campaign", 22),
+        ("control", 12),
+        ("P", 6, ">"),
+        ("R", 6, ">"),
+        ("F1", 6, ">"),
+        ("FPR", 6, ">"),
+        ("ASR", 7, ">"),
+    )
+    table.head()
     for record in records:
         d = metrics.detection(record.episodes)
-        tiers = record.episodes[0].defense_tiers
-        print(
-            f"  {record.id:<22} {control_label(tiers):<12} "
-            f"{d['precision']:>6.3f} {d['recall']:>6.3f} {d['f1']:>6.3f} "
-            f"{d['false_positive_rate']:>6.3f} {metrics.asr(record.episodes):>6.1%}"
+        table.row(
+            record.id,
+            control_label(record.episodes[0].defense_tiers),
+            f"{d['precision']:.3f}",
+            f"{d['recall']:.3f}",
+            f"{d['f1']:.3f}",
+            f"{d['false_positive_rate']:.3f}",
+            f"{metrics.asr(record.episodes):.1%}",
         )
 
     _gap(records)
@@ -84,7 +94,7 @@ def _gap(records: list) -> None:
         r for r in records if metrics.recall(r.episodes) == 1.0 and metrics.asr(r.episodes) > 0
     ]
 
-    print(f"\n  {'-' * 76}")
+    divider()
     print("  DETECTION IS NOT PREVENTION")
     for record in perfect:
         moved = fmt(metrics.rupees_moved(record.episodes))
@@ -107,7 +117,8 @@ def _gap(records: list) -> None:
             )
         print("    The variants it finds are not caught late. They are not caught.")
 
-    print(f"\n  scored episodes        {len([e for e in every if e.counts_toward_rates])}")
+    print()
+    field("scored episodes", len([e for e in every if e.counts_toward_rates]), width=23)
 
 
 def _auc(records: list) -> None:
@@ -135,9 +146,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     console_setup()
 
-    print(RULE)
-    print("PRAMAN  ·  DETECTION EFFICACY")
-    print(RULE)
+    banner("DETECTION EFFICACY")
     print("\n  Attacks are the positive class. A flag is the control naming a rule")
     print("  or escalating for review. Refusals and harness errors are excluded.")
 

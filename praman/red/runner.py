@@ -17,6 +17,7 @@ from pathlib import Path
 
 from praman import metrics
 from praman.blue.defense import Defense
+from praman.console import Table, banner, summary
 from praman.console import setup as console_setup
 from praman.money import fmt
 from praman.range.agent import ScriptedAgent
@@ -24,8 +25,6 @@ from praman.range.catalog import FIXTURES_DIR
 from praman.red.attacks import ATTACKS
 from praman.red.episode import Episode, write_jsonl
 from praman.red.executor import BENIGN, run_episode
-
-RULE = "─" * 76
 
 
 def run_campaign(
@@ -102,28 +101,37 @@ def _all_blocks_named(episodes: list[Episode]) -> bool:
 
 def _baseline_table(baseline: list[Episode]) -> None:
     print()
-    print(f"  {'attack':<7} {'name':<32} {'ASR':>6} {'moved':>14}")
-    print(f"  {'-' * 7} {'-' * 32} {'-' * 6} {'-' * 14}")
+    table = Table(("attack", 7), ("name", 32), ("ASR", 6, ">"), ("moved", 14, ">"))
+    table.head()
     for attack_id, rate in metrics.asr_by_attack(baseline).items():
         rows = _rows(baseline, attack_id)
-        moved = fmt(metrics.rupees_moved(rows))
-        print(f"  {attack_id:<7} {ATTACKS[attack_id].name:<32} {rate:>5.0%} {moved:>14}")
+        table.row(
+            attack_id, ATTACKS[attack_id].name, f"{rate:.0%}", fmt(metrics.rupees_moved(rows))
+        )
 
 
 def _defended_table(baseline: list[Episode], defended: list[Episode]) -> None:
     print()
-    print(f"  {'attack':<7} {'name':<30} {'ASR':>12} {'at risk':>12} {'left':>11} {'rule':>8}")
-    print(f"  {'-' * 7} {'-' * 30} {'-' * 12} {'-' * 12} {'-' * 11} {'-' * 8}")
+    table = Table(
+        ("attack", 7),
+        ("name", 30),
+        ("ASR", 12, ">"),
+        ("at risk", 12, ">"),
+        ("left", 11, ">"),
+        ("rule", 8, ">"),
+    )
+    table.head()
     # From the episodes, not the registry: a campaign may have run a subset.
     for attack_id in sorted({e.attack_id for e in defended} - {BENIGN}):
         base_rows = _rows(baseline, attack_id)
         def_rows = _rows(defended, attack_id)
-        invariant = next((e.violated_invariant for e in def_rows if e.violated_invariant), "-")
-        arrow = f"{metrics.asr(base_rows):.0%} -> {metrics.asr(def_rows):.0%}"
-        print(
-            f"  {attack_id:<7} {ATTACKS[attack_id].name:<30} {arrow:>12} "
-            f"{fmt(metrics.rupees_moved(base_rows)):>12} "
-            f"{fmt(metrics.rupees_moved(def_rows)):>11} {invariant:>8}"
+        table.row(
+            attack_id,
+            ATTACKS[attack_id].name,
+            f"{metrics.asr(base_rows):.0%} -> {metrics.asr(def_rows):.0%}",
+            fmt(metrics.rupees_moved(base_rows)),
+            fmt(metrics.rupees_moved(def_rows)),
+            next((e.violated_invariant for e in def_rows if e.violated_invariant), "-"),
         )
 
 
@@ -131,34 +139,43 @@ def report(
     baseline: list[Episode], defended: list[Episode] | None, profile: str, seed: int
 ) -> None:
     title = "BASELINE — no control in place" if defended is None else "TIER 1"
-    print(RULE)
-    print(f"PRAMAN  ·  {title}  ·  profile: {profile}  ·  seed: {seed}")
-    print(RULE)
+    banner(title, f"profile: {profile}", f"seed: {seed}")
 
     if defended is None:
         _baseline_table(baseline)
-        print(f"\n  {'-' * 74}")
-        print(f"  undefended ASR       {metrics.asr(baseline):.1%}")
-        print(f"  moved                {fmt(metrics.rupees_moved(baseline))}")
-        print(f"  benign pass rate     {metrics.benign_pass_rate(baseline):.1%}")
-        print(f"  episodes             {len(baseline)}\n")
+        summary(
+            [
+                ("undefended ASR", f"{metrics.asr(baseline):.1%}"),
+                ("moved", fmt(metrics.rupees_moved(baseline))),
+                ("benign pass rate", f"{metrics.benign_pass_rate(baseline):.1%}"),
+                ("episodes", len(baseline)),
+            ]
+        )
+        print()
         return
 
     _defended_table(baseline, defended)
     control_ms = [e.latency_ms.get("control", 0.0) for e in defended]
-    prevented = fmt(metrics.rupees_prevented(baseline, defended))
     share = metrics.prevention_rate(baseline, defended)
-
-    print(f"\n  {'-' * 74}")
-    print(f"  ASR                  {metrics.asr(baseline):.1%} -> {metrics.asr(defended):.1%}")
-    print(f"  prevented            {prevented}   ({share:.1%} of value at risk)")
-    print(f"  benign pass rate     {metrics.benign_pass_rate(defended):.1%}")
     mean_ms = sum(control_ms) / max(len(control_ms), 1)
-    print(f"  control latency      {mean_ms:.3f} ms per authorisation")
-    print("                       arithmetic ~0.02ms; the rest is signature")
-    print("                       verification and the freshness datastore write")
-    print(f"  every block named    {'yes' if _all_blocks_named(defended) else 'NO'}")
-    print(f"  episodes             {len(defended)}\n")
+
+    summary(
+        [
+            ("ASR", f"{metrics.asr(baseline):.1%} -> {metrics.asr(defended):.1%}"),
+            (
+                "prevented",
+                f"{fmt(metrics.rupees_prevented(baseline, defended))}   "
+                f"({share:.1%} of value at risk)",
+            ),
+            ("benign pass rate", f"{metrics.benign_pass_rate(defended):.1%}"),
+            ("control latency", f"{mean_ms:.3f} ms per authorisation"),
+            ("", "arithmetic ~0.02ms; the rest is signature"),
+            ("", "verification and the freshness datastore write"),
+            ("every block named", "yes" if _all_blocks_named(defended) else "NO"),
+            ("episodes", len(defended)),
+        ]
+    )
+    print()
 
 
 def main(argv: list[str] | None = None) -> int:

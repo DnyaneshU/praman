@@ -16,26 +16,36 @@ from pathlib import Path
 
 from praman import metrics
 from praman.blue.defense import Defense
+from praman.console import Table, banner, summary
 from praman.console import setup as console_setup
 from praman.money import fmt
 from praman.red.campaign import CampaignResult, run_adaptive_campaign
 from praman.red.episode import write_jsonl
 from praman.red.mutator.base import STRATEGIES
 
-RULE = "─" * 76
 BAR_WIDTH = 34
 
 
 def _curve(result: CampaignResult) -> None:
-    print(f"\n  {'round':<7} {'ASR':>6}  {'':<{BAR_WIDTH}} {'episodes':>9} {'moved':>13}")
-    print(f"  {'-' * 7} {'-' * 6}  {'-' * BAR_WIDTH} {'-' * 9} {'-' * 13}")
-    rounds = sorted({e.round for e in result.episodes})
-    for round_ in rounds:
+    print()
+    table = Table(
+        ("round", 7),
+        ("ASR", 6, ">"),
+        ("", BAR_WIDTH),
+        ("episodes", 9, ">"),
+        ("moved", 13, ">"),
+    )
+    table.head()
+    for round_ in sorted({e.round for e in result.episodes}):
         rows = [e for e in result.episodes if e.round == round_]
         rate = metrics.asr(rows)
-        bar = "█" * round(rate * BAR_WIDTH)
-        moved = fmt(metrics.rupees_moved(rows))
-        print(f"  {round_:<7} {rate:>5.0%}  {bar:<{BAR_WIDTH}} {len(rows):>9} {moved:>13}")
+        table.row(
+            round_,
+            f"{rate:.0%}",
+            "█" * round(rate * BAR_WIDTH),
+            len(rows),
+            fmt(metrics.rupees_moved(rows)),
+        )
 
 
 def _breakthroughs(result: CampaignResult) -> None:
@@ -43,14 +53,16 @@ def _breakthroughs(result: CampaignResult) -> None:
         print("\n  no attack got through — the control held for every round")
         return
 
-    print(f"\n  {'broke through':<40} {'via'}")
-    print(f"  {'-' * 40} {'-' * 34}")
+    print()
+    table = Table(("broke through", 40), ("via", 34))
+    table.head()
     for variant in result.breakthroughs:
-        if variant.strategies:
-            reason = STRATEGIES[variant.strategies[-1]].rationale
-        else:
-            reason = "succeeded without adapting"
-        print(f"  {str(variant):<40} {reason}")
+        rationale = (
+            STRATEGIES[variant.strategies[-1]].rationale
+            if variant.strategies
+            else "succeeded without adapting"
+        )
+        table.row(variant, rationale)
 
 
 def _held(result: CampaignResult) -> None:
@@ -63,25 +75,30 @@ def _held(result: CampaignResult) -> None:
 
 def report(result: CampaignResult, seed: int, profile: str) -> None:
     episodes = result.episodes
-    print(RULE)
-    print(f"PRAMAN  ·  ADAPTIVE CAMPAIGN  ·  profile: {profile}  ·  seed: {seed}")
-    print(RULE)
+    banner("ADAPTIVE CAMPAIGN", f"profile: {profile}", f"seed: {seed}")
 
     _curve(result)
     _breakthroughs(result)
     _held(result)
 
-    static = metrics.static_asr(episodes)
-    adaptive = metrics.adaptive_asr(episodes)
     broke_at = metrics.rounds_to_break(episodes)
-
-    print(f"\n  {'-' * 74}")
-    print(f"  static ASR           {static:.1%}   (documented attack, control knows it)")
-    print(f"  adaptive ASR         {adaptive:.1%}   (same attacker, allowed to adapt)")
-    print(f"  adaptive delta       {metrics.adaptive_delta(episodes) * 100:+.1f} points")
-    print(f"  rounds to break      {broke_at if broke_at is not None else 'never'}")
-    print(f"  moved                {fmt(metrics.rupees_moved(episodes))}")
-    print(f"  episodes             {len(episodes)}\n")
+    summary(
+        [
+            (
+                "static ASR",
+                f"{metrics.static_asr(episodes):.1%}   (documented attack, control knows it)",
+            ),
+            (
+                "adaptive ASR",
+                f"{metrics.adaptive_asr(episodes):.1%}   (same attacker, allowed to adapt)",
+            ),
+            ("adaptive delta", f"{metrics.adaptive_delta(episodes) * 100:+.1f} points"),
+            ("rounds to break", broke_at if broke_at is not None else "never"),
+            ("moved", fmt(metrics.rupees_moved(episodes))),
+            ("episodes", len(episodes)),
+        ]
+    )
+    print()
 
 
 def main(argv: list[str] | None = None) -> int:
