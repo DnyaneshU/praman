@@ -30,3 +30,9 @@ results/scratch/
 Thumbs.db
 .DS_Store
 dist/
+
+# Word's lock file, present whenever the walkthrough is open for reading.
+# Untracked but not ignored, it rode along with any `git add -A` — and a
+# committed ~$ file tells everyone who clones that the document is locked by
+# someone who left.
+~$*
