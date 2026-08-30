@@ -101,3 +101,84 @@ def test_the_honest_limits_are_stated(document):
     assert "held-out" in text
     assert "coerced-principal" in text
     assert "0%" in text
+
+
+# -- the report as a report -------------------------------------------------
+#
+# The document is addressed to a reader deciding whether this is a product,
+# not only to a rubric. These guard the shape that makes it one: why before
+# what, what before how, and the reasoning shown rather than the conclusion
+# asserted.
+
+
+@needs_docx
+def test_it_argues_why_before_it_explains_how(document):
+    """A reader should reach the reasoning before the first metric.
+
+    The engineering is Part IV on purpose. A walkthrough that opens on tables
+    tells you what was measured and never what was at stake.
+    """
+    headings = [
+        p.text for p in document.paragraphs if p.style.name.startswith("Heading") and p.text.strip()
+    ]
+    order = [next(i for i, h in enumerate(headings) if part in h) for part in ("Part I", "Part IV")]
+    assert order == sorted(order), "the engineering precedes the argument for it"
+
+    joined = " ".join(headings)
+    for part in ("Part I", "Part II", "Part III", "Part IV", "Appendix"):
+        assert part in joined, f"{part} is missing"
+
+
+@needs_docx
+def test_the_rejected_alternatives_are_named(document):
+    """The decisions table is the philosophy, and half of it is what we did not do.
+
+    A table of choices with no alternatives is a feature list. The rejected
+    column is the part that shows the reasoning, so it has to carry reasons.
+    """
+    decisions = next(
+        (t for t in document.tables if t.rows[0].cells[0].text == "Decision"),
+        None,
+    )
+    assert decisions is not None, "no decisions table in the document"
+    assert len(decisions.rows) > 5, "too few decisions to be an account of the design"
+
+    for row in decisions.rows[1:]:
+        decision, chosen, rejected = (c.text.strip() for c in row.cells)
+        assert chosen, f"{decision} names no choice"
+        # A rejected alternative has to carry the reasoning, not just a label —
+        # "a container" explains nothing; "a container, because free tiers
+        # sleep" is the part a reader learns from.
+        assert len(rejected.split()) >= 8, f"{decision}: the rejected option gives no reason"
+
+
+@needs_docx
+def test_the_claim_is_falsifiable(document):
+    """What would have to be true for this to be wrong, stated in the document.
+
+    And wired to something: a falsifying condition nothing checks is a
+    paragraph. Two of the three are exit codes the CLI actually returns.
+    """
+    headings = [p.text.lower() for p in document.paragraphs if p.style.name.startswith("Heading")]
+    assert any("change our mind" in h for h in headings), "no falsifiability section"
+
+    text = " ".join(p.text for p in document.paragraphs).lower()
+    assert "exits non-zero" in text, "no falsifying condition is wired to a check"
+
+
+@needs_docx
+def test_the_opening_figures_are_the_harnesss_figures(document):
+    """The summary table a skimmer reads first must agree with results/."""
+    figures = next((t for t in document.tables if t.rows[0].cells[0].text == "Measure"), None)
+    assert figures is not None, "no opening figures table"
+
+    values = {row.cells[0].text: row.cells[1].text for row in figures.rows[1:]}
+    store = {r.id: r for r in CampaignStore("results").list()}
+    tier1 = store["autopay-tier1"]
+
+    assert values["Attack success behind Tier 1"] == f"{metrics.asr(tier1.episodes):.1%}"
+    assert (
+        values["Attack success with no control"]
+        == f"{metrics.asr(store['autopay-undefended'].episodes):.1%}"
+    )
+    assert str(len(load_corpus())) in values["Attack vectors mapped"]
