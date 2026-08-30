@@ -196,3 +196,85 @@ def test_the_cover_names_the_team(document):
 
     cover = " ".join(p.text for p in document.paragraphs[:12])
     assert TEAM in cover, "the cover does not name the team"
+
+
+# -- the figures ------------------------------------------------------------
+
+
+needs_charts = pytest.mark.skipif(
+    importlib.util.find_spec("matplotlib") is None,
+    reason='matplotlib is not installed (pip install -e ".[docs]")',
+)
+
+
+@needs_docx
+@needs_charts
+def test_every_figure_reaches_the_document(document):
+    """Six charts declared, six embedded.
+
+    A figure that renders but is never placed is worse than no figure: the
+    caption numbering skips and the reader goes looking for it.
+    """
+    from praman.report.charts import FIGURES
+
+    embedded = [rel for rel in document.part.rels.values() if "image" in rel.reltype]
+    assert len(embedded) == len(FIGURES), (
+        f"{len(FIGURES)} figures declared, {len(embedded)} embedded"
+    )
+
+    captions = " ".join(p.text for p in document.paragraphs)
+    for caption in FIGURES.values():
+        assert caption in captions, f"no caption for {caption!r}"
+
+
+@needs_docx
+def test_the_document_stays_readable_rather_than_exhaustive(document):
+    """Prose is capped so the figures and tables carry the argument.
+
+    An earlier draft ran to nearly four thousand words of unbroken text. The
+    brief was a report a non-specialist can read, and past roughly three
+    thousand words that stops being true no matter how good the sentences are.
+    """
+    words = sum(len(p.text.split()) for p in document.paragraphs)
+    assert words < 3000, f"{words} words — the prose is crowding out the evidence"
+    assert len(document.tables) >= 15, "too few tables for a report this length"
+
+
+@needs_docx
+def test_the_jargon_is_defined_before_it_is_used(document):
+    """A glossary, and it has to precede the engineering that needs it."""
+    from praman.report.walkthrough import GLOSSARY
+
+    paragraphs = [p.text for p in document.paragraphs]
+    defined = {cell.text for t in document.tables for row in t.rows for cell in row.cells}
+    for term, _ in GLOSSARY:
+        assert term in defined, f"{term} is used but never defined"
+
+    glossary_at = next(i for i, t in enumerate(paragraphs) if "words this report uses" in t.lower())
+    evidence_at = next(i for i, t in enumerate(paragraphs) if t.startswith("Part IV"))
+    assert glossary_at < evidence_at, "the glossary comes after the terms it defines"
+
+
+@needs_docx
+def test_external_numbers_are_attributed_in_the_document(document):
+    """Appendix B exists and names a publisher for every borrowed figure."""
+    from praman.report.sources import MARKET
+
+    attributions = next(
+        (t for t in document.tables if t.rows[0].cells[0].text == "Figure"),
+        None,
+    )
+    assert attributions is not None, "no source table in the document"
+    assert len(attributions.rows) - 1 == len(MARKET)
+    for row in attributions.rows[1:]:
+        assert row.cells[2].text.strip(), f"{row.cells[0].text} is unattributed"
+
+
+@needs_docx
+def test_the_references_are_numbered_and_resolvable(document):
+    from praman.report.sources import SOURCES
+
+    text = " ".join(p.text for p in document.paragraphs)
+    for index, source in enumerate(SOURCES, start=1):
+        assert f"[{index}]" in text, f"reference {index} is missing"
+        assert source.url in text, f"{source.key} has no URL in the reference list"
