@@ -36,3 +36,9 @@ dist/
 # committed ~$ file tells everyone who clones that the document is locked by
 # someone who left.
 ~$*
+
+# Copy written for the hackathon submission form, kept beside the document it
+# summarises for convenience. Not committed: it would be a third overlapping
+# description of the project after the README and the walkthrough, and the one
+# most likely to go stale first.
+docs/project-description.md
