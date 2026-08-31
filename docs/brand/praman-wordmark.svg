@@ -1,0 +1,793 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="409.837453pt" height="92.237812pt" viewBox="0 0 409.837453 92.237812" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-08-31T22:37:46.466517</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.1, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 92.237812 
+L 409.837453 92.237812 
+L 409.837453 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="line2d_1">
+    <path d="M 31.073684 40.193406 
+L 48.237771 40.193406 
+" clip-path="url(#p0622e73741)" style="fill: none; stroke: #111822; stroke-width: 5.5"/>
+   </g>
+   <g id="line2d_2">
+    <path d="M 66.962229 40.193406 
+L 71.799381 40.193406 
+" clip-path="url(#p0622e73741)" style="fill: none; stroke: #111822; stroke-width: 5.5"/>
+   </g>
+   <g id="line2d_3">
+    <path d="M 79.289164 45.186594 
+L 84.126316 45.186594 
+" clip-path="url(#p0622e73741)" style="fill: none; stroke: #c02b3e; stroke-width: 5.5"/>
+   </g>
+   <g id="patch_2">
+    <path d="M 21.711455 49.555635 
+C 24.194347 49.555635 26.575881 48.569171 28.331551 46.813501 
+C 30.087221 45.057831 31.073684 42.676298 31.073684 40.193406 
+C 31.073684 37.710513 30.087221 35.32898 28.331551 33.57331 
+C 26.575881 31.81764 24.194347 30.831176 21.711455 30.831176 
+C 19.228563 30.831176 16.847029 31.81764 15.091359 33.57331 
+C 13.33569 35.32898 12.349226 37.710513 12.349226 40.193406 
+C 12.349226 42.676298 13.33569 45.057831 15.091359 46.813501 
+C 16.847029 48.569171 19.228563 49.555635 21.711455 49.555635 
+z
+" clip-path="url(#p0622e73741)" style="fill: #111822"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 57.6 49.555635 
+C 60.082892 49.555635 62.464426 48.569171 64.220096 46.813501 
+C 65.975766 45.057831 66.962229 42.676298 66.962229 40.193406 
+C 66.962229 37.710513 65.975766 35.32898 64.220096 33.57331 
+C 62.464426 31.81764 60.082892 30.831176 57.6 30.831176 
+C 55.117108 30.831176 52.735574 31.81764 50.979904 33.57331 
+C 49.224234 35.32898 48.237771 37.710513 48.237771 40.193406 
+C 48.237771 42.676298 49.224234 45.057831 50.979904 46.813501 
+C 52.735574 48.569171 55.117108 49.555635 57.6 49.555635 
+z
+" clip-path="url(#p0622e73741)" style="fill: #111822"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 93.488545 54.548824 
+C 95.971437 54.548824 98.352971 53.56236 100.108641 51.80669 
+C 101.86431 50.05102 102.850774 47.669487 102.850774 45.186594 
+C 102.850774 42.703702 101.86431 40.322169 100.108641 38.566499 
+C 98.352971 36.810829 95.971437 35.824365 93.488545 35.824365 
+C 91.005653 35.824365 88.624119 36.810829 86.868449 38.566499 
+C 85.112779 40.322169 84.126316 42.703702 84.126316 45.186594 
+C 84.126316 47.669487 85.112779 50.05102 86.868449 51.80669 
+C 88.624119 53.56236 91.005653 54.548824 93.488545 54.548824 
+L 93.488545 54.548824 
+z
+" clip-path="url(#p0622e73741)" style="fill: none; stroke: #c02b3e; stroke-width: 4.5; stroke-linejoin: miter"/>
+   </g>
+  </g>
+  <g id="text_1">
+   <!-- PRAMAN -->
+   <g style="fill: #111822" transform="translate(116.64 39.110156) scale(0.42 -0.42)">
+    <defs>
+     <path id="DejaVuSans-Bold-33" d="M 588 4666 
+L 2584 4666 
+Q 3475 4666 3951 4270 
+Q 4428 3875 4428 3144 
+Q 4428 2409 3951 2014 
+Q 3475 1619 2584 1619 
+L 1791 1619 
+L 1791 0 
+L 588 0 
+L 588 4666 
+z
+M 1791 3794 
+L 1791 2491 
+L 2456 2491 
+Q 2806 2491 2997 2661 
+Q 3188 2831 3188 3144 
+Q 3188 3456 2997 3625 
+Q 2806 3794 2456 3794 
+L 1791 3794 
+z
+" transform="scale(0.015625)"/>
+     <path id="DejaVuSans-Bold-35" d="M 2297 2597 
+Q 2675 2597 2839 2737 
+Q 3003 2878 3003 3200 
+Q 3003 3519 2839 3656 
+Q 2675 3794 2297 3794 
+L 1791 3794 
+L 1791 2597 
+L 2297 2597 
+z
+M 1791 1766 
+L 1791 0 
+L 588 0 
+L 588 4666 
+L 2425 4666 
+Q 3347 4666 3776 4356 
+Q 4206 4047 4206 3378 
+Q 4206 2916 3982 2619 
+Q 3759 2322 3309 2181 
+Q 3556 2125 3751 1926 
+Q 3947 1728 4147 1325 
+L 4800 0 
+L 3519 0 
+L 2950 1159 
+Q 2778 1509 2601 1637 
+Q 2425 1766 2131 1766 
+L 1791 1766 
+z
+" transform="scale(0.015625)"/>
+     <path id="DejaVuSans-Bold-24" d="M 3419 850 
+L 1538 850 
+L 1241 0 
+L 31 0 
+L 1759 4666 
+L 3194 4666 
+L 4922 0 
+L 3713 0 
+L 3419 850 
+z
+M 1838 1716 
+L 3116 1716 
+L 2478 3572 
+L 1838 1716 
+z
+" transform="scale(0.015625)"/>
+     <path id="DejaVuSans-Bold-30" d="M 588 4666 
+L 2119 4666 
+L 3181 2169 
+L 4250 4666 
+L 5778 4666 
+L 5778 0 
+L 4641 0 
+L 4641 3413 
+L 3566 897 
+L 2803 897 
+L 1728 3413 
+L 1728 0 
+L 588 0 
+L 588 4666 
+z
+" transform="scale(0.015625)"/>
+     <path id="DejaVuSans-Bold-31" d="M 588 4666 
+L 1931 4666 
+L 3628 1466 
+L 3628 4666 
+L 4769 4666 
+L 4769 0 
+L 3425 0 
+L 1728 3200 
+L 1728 0 
+L 588 0 
+L 588 4666 
+z
+" transform="scale(0.015625)"/>
+    </defs>
+    <use xlink:href="#DejaVuSans-Bold-33"/>
+    <use xlink:href="#DejaVuSans-Bold-35" transform="translate(73.296875 0)"/>
+    <use xlink:href="#DejaVuSans-Bold-24" transform="translate(150.296875 0)"/>
+    <use xlink:href="#DejaVuSans-Bold-30" transform="translate(227.6875 0)"/>
+    <use xlink:href="#DejaVuSans-Bold-24" transform="translate(327.203125 0)"/>
+    <use xlink:href="#DejaVuSans-Bold-31" transform="translate(404.59375 0)"/>
+   </g>
+  </g>
+  <g id="text_2">
+   <!-- प्रमाण   ·   breach and attack simulation for payment mandates -->
+   <g style="fill: #5b6675" transform="translate(118.368 82.567031) scale(0.105 -0.105)">
+    <defs>
+     <path id="NirmalaUI-16e" d="M 3963 4200 
+L 3306 4200 
+L 3306 0 
+L 2791 0 
+L 2791 1394 
+L 2778 1397 
+L 872 -38 
+L 550 353 
+L 1659 1150 
+L 1656 1163 
+Q 1416 1181 1219 1268 
+Q 1022 1356 881 1515 
+Q 741 1675 664 1909 
+Q 588 2144 588 2456 
+L 588 4200 
+L -109 4200 
+L -109 4659 
+L 3963 4659 
+L 3963 4200 
+z
+M 2791 4200 
+L 1094 4200 
+L 1094 2484 
+Q 1094 2288 1126 2131 
+Q 1159 1975 1239 1865 
+Q 1319 1756 1450 1698 
+Q 1581 1641 1778 1641 
+Q 2100 1641 2359 1783 
+Q 2619 1925 2791 2159 
+L 2791 4200 
+z
+" transform="scale(0.015625)"/>
+     <path id="NirmalaUI-111" d="M 4419 4200 
+L 3763 4200 
+L 3763 0 
+L 3250 0 
+L 3250 1753 
+L 1531 1753 
+L 1531 1381 
+Q 1531 1284 1523 1209 
+Q 1516 1134 1489 1084 
+Q 1463 1034 1414 1007 
+Q 1366 981 1284 981 
+Q 1203 981 1103 1029 
+Q 1003 1078 900 1161 
+Q 797 1244 700 1348 
+Q 603 1453 526 1567 
+Q 450 1681 403 1793 
+Q 356 1906 356 2000 
+Q 356 2066 379 2108 
+Q 403 2150 445 2172 
+Q 488 2194 547 2201 
+Q 606 2209 681 2209 
+L 1019 2209 
+L 1019 4200 
+L -109 4200 
+L -109 4659 
+L 4419 4659 
+L 4419 4200 
+z
+M 1531 4200 
+L 1531 2209 
+L 3250 2209 
+L 3250 4200 
+L 1531 4200 
+z
+" transform="scale(0.015625)"/>
+     <path id="NirmalaUI-12d" d="M 1772 4200 
+L 1116 4200 
+L 1116 0 
+L 603 0 
+L 603 4200 
+L -109 4200 
+L -109 4659 
+L 1772 4659 
+L 1772 4200 
+z
+" transform="scale(0.015625)"/>
+     <path id="NirmalaUI-106" d="M 4853 4200 
+L 4197 4200 
+L 4197 0 
+L 3684 0 
+L 3684 4200 
+L 2909 4200 
+L 2909 2266 
+Q 2909 1941 2820 1706 
+Q 2731 1472 2576 1319 
+Q 2422 1166 2215 1092 
+Q 2009 1019 1772 1019 
+Q 1506 1019 1292 1103 
+Q 1078 1188 928 1353 
+Q 778 1519 697 1764 
+Q 616 2009 616 2328 
+L 616 4200 
+L -109 4200 
+L -109 4659 
+L 4853 4659 
+L 4853 4200 
+z
+M 1134 4200 
+L 1134 2231 
+Q 1134 2088 1167 1955 
+Q 1200 1822 1273 1719 
+Q 1347 1616 1467 1553 
+Q 1588 1491 1763 1491 
+Q 1941 1491 2061 1553 
+Q 2181 1616 2256 1719 
+Q 2331 1822 2364 1955 
+Q 2397 2088 2397 2231 
+L 2397 4200 
+L 1134 4200 
+z
+" transform="scale(0.015625)"/>
+     <path id="NirmalaUI-3" transform="scale(0.015625)"/>
+     <path id="NirmalaUI-9f" d="M 697 1594 
+Q 553 1594 451 1697 
+Q 350 1800 350 1944 
+Q 350 2091 451 2194 
+Q 553 2297 697 2297 
+Q 844 2297 947 2194 
+Q 1050 2091 1050 1944 
+Q 1050 1800 947 1697 
+Q 844 1594 697 1594 
+z
+" transform="scale(0.015625)"/>
+     <path id="NirmalaUI-41" d="M 1044 463 
+L 1031 463 
+L 1031 0 
+L 519 0 
+L 519 4738 
+L 1031 4738 
+L 1031 2638 
+L 1044 2638 
+Q 1422 3275 2150 3275 
+Q 2766 3275 3114 2845 
+Q 3463 2416 3463 1694 
+Q 3463 891 3072 408 
+Q 2681 -75 2003 -75 
+Q 1369 -75 1044 463 
+z
+M 1031 1753 
+L 1031 1306 
+Q 1031 909 1289 632 
+Q 1547 356 1944 356 
+Q 2409 356 2673 712 
+Q 2938 1069 2938 1703 
+Q 2938 2238 2691 2541 
+Q 2444 2844 2022 2844 
+Q 1575 2844 1303 2533 
+Q 1031 2222 1031 1753 
+z
+" transform="scale(0.015625)"/>
+     <path id="NirmalaUI-51" d="M 2188 2681 
+Q 2053 2784 1800 2784 
+Q 1472 2784 1251 2475 
+Q 1031 2166 1031 1631 
+L 1031 0 
+L 519 0 
+L 519 3200 
+L 1031 3200 
+L 1031 2541 
+L 1044 2541 
+Q 1153 2878 1378 3067 
+Q 1603 3256 1881 3256 
+Q 2081 3256 2188 3213 
+L 2188 2681 
+z
+" transform="scale(0.015625)"/>
+     <path id="NirmalaUI-44" d="M 3091 1472 
+L 831 1472 
+Q 844 938 1119 647 
+Q 1394 356 1875 356 
+Q 2416 356 2869 713 
+L 2869 231 
+Q 2447 -75 1753 -75 
+Q 1075 -75 687 361 
+Q 300 797 300 1588 
+Q 300 2334 723 2804 
+Q 1147 3275 1775 3275 
+Q 2403 3275 2747 2869 
+Q 3091 2463 3091 1741 
+L 3091 1472 
+z
+M 2566 1906 
+Q 2563 2350 2352 2597 
+Q 2141 2844 1766 2844 
+Q 1403 2844 1150 2584 
+Q 897 2325 838 1906 
+L 2566 1906 
+z
+" transform="scale(0.015625)"/>
+     <path id="NirmalaUI-40" d="M 2809 0 
+L 2297 0 
+L 2297 500 
+L 2284 500 
+Q 1950 -75 1300 -75 
+Q 822 -75 551 178 
+Q 281 431 281 850 
+Q 281 1747 1338 1894 
+L 2297 2028 
+Q 2297 2844 1638 2844 
+Q 1059 2844 594 2450 
+L 594 2975 
+Q 1066 3275 1681 3275 
+Q 2809 3275 2809 2081 
+L 2809 0 
+z
+M 2297 1619 
+L 1525 1513 
+Q 1169 1463 987 1336 
+Q 806 1209 806 888 
+Q 806 653 973 504 
+Q 1141 356 1419 356 
+Q 1800 356 2048 623 
+Q 2297 891 2297 1300 
+L 2297 1619 
+z
+" transform="scale(0.015625)"/>
+     <path id="NirmalaUI-42" d="M 2700 147 
+Q 2331 -75 1825 -75 
+Q 1141 -75 720 370 
+Q 300 816 300 1525 
+Q 300 2316 753 2795 
+Q 1206 3275 1963 3275 
+Q 2384 3275 2706 3119 
+L 2706 2594 
+Q 2350 2844 1944 2844 
+Q 1453 2844 1139 2492 
+Q 825 2141 825 1569 
+Q 825 1006 1120 681 
+Q 1416 356 1913 356 
+Q 2331 356 2700 634 
+L 2700 147 
+z
+" transform="scale(0.015625)"/>
+     <path id="NirmalaUI-47" d="M 3175 0 
+L 2663 0 
+L 2663 1844 
+Q 2663 2844 1919 2844 
+Q 1544 2844 1287 2555 
+Q 1031 2266 1031 1813 
+L 1031 0 
+L 519 0 
+L 519 4738 
+L 1031 4738 
+L 1031 2669 
+L 1044 2669 
+Q 1413 3275 2094 3275 
+Q 3175 3275 3175 1972 
+L 3175 0 
+z
+" transform="scale(0.015625)"/>
+     <path id="NirmalaUI-4d" d="M 3175 0 
+L 2663 0 
+L 2663 1825 
+Q 2663 2844 1919 2844 
+Q 1534 2844 1282 2555 
+Q 1031 2266 1031 1825 
+L 1031 0 
+L 519 0 
+L 519 3200 
+L 1031 3200 
+L 1031 2669 
+L 1044 2669 
+Q 1406 3275 2094 3275 
+Q 2619 3275 2897 2936 
+Q 3175 2597 3175 1956 
+L 3175 0 
+z
+" transform="scale(0.015625)"/>
+     <path id="NirmalaUI-43" d="M 3250 0 
+L 2738 0 
+L 2738 544 
+L 2725 544 
+Q 2369 -75 1625 -75 
+Q 1022 -75 661 354 
+Q 300 784 300 1525 
+Q 300 2319 700 2797 
+Q 1100 3275 1766 3275 
+Q 2425 3275 2725 2756 
+L 2738 2756 
+L 2738 4738 
+L 3250 4738 
+L 3250 0 
+z
+M 2738 1447 
+L 2738 1919 
+Q 2738 2306 2481 2575 
+Q 2225 2844 1831 2844 
+Q 1363 2844 1094 2500 
+Q 825 2156 825 1550 
+Q 825 997 1083 676 
+Q 1341 356 1775 356 
+Q 2203 356 2470 665 
+Q 2738 975 2738 1447 
+z
+" transform="scale(0.015625)"/>
+     <path id="NirmalaUI-53" d="M 2003 31 
+Q 1822 -69 1525 -69 
+Q 684 -69 684 869 
+L 684 2763 
+L 134 2763 
+L 134 3200 
+L 684 3200 
+L 684 3981 
+L 1197 4147 
+L 1197 3200 
+L 2003 3200 
+L 2003 2763 
+L 1197 2763 
+L 1197 959 
+Q 1197 638 1306 500 
+Q 1416 363 1669 363 
+Q 1863 363 2003 469 
+L 2003 31 
+z
+" transform="scale(0.015625)"/>
+     <path id="NirmalaUI-4a" d="M 3175 0 
+L 2456 0 
+L 1044 1538 
+L 1031 1538 
+L 1031 0 
+L 519 0 
+L 519 4738 
+L 1031 4738 
+L 1031 1734 
+L 1044 1734 
+L 2388 3200 
+L 3059 3200 
+L 1575 1656 
+L 3175 0 
+z
+" transform="scale(0.015625)"/>
+     <path id="NirmalaUI-52" d="M 325 116 
+L 325 666 
+Q 744 356 1247 356 
+Q 1922 356 1922 806 
+Q 1922 934 1864 1023 
+Q 1806 1113 1707 1181 
+Q 1609 1250 1476 1304 
+Q 1344 1359 1191 1419 
+Q 978 1503 817 1589 
+Q 656 1675 548 1783 
+Q 441 1891 386 2028 
+Q 331 2166 331 2350 
+Q 331 2575 434 2748 
+Q 538 2922 709 3039 
+Q 881 3156 1101 3215 
+Q 1322 3275 1556 3275 
+Q 1972 3275 2300 3131 
+L 2300 2613 
+Q 1947 2844 1488 2844 
+Q 1344 2844 1228 2811 
+Q 1113 2778 1030 2718 
+Q 947 2659 901 2576 
+Q 856 2494 856 2394 
+Q 856 2269 901 2184 
+Q 947 2100 1034 2034 
+Q 1122 1969 1247 1916 
+Q 1372 1863 1531 1800 
+Q 1744 1719 1912 1633 
+Q 2081 1547 2200 1439 
+Q 2319 1331 2383 1190 
+Q 2447 1050 2447 856 
+Q 2447 619 2342 444 
+Q 2238 269 2063 153 
+Q 1888 38 1659 -18 
+Q 1431 -75 1181 -75 
+Q 688 -75 325 116 
+z
+" transform="scale(0.015625)"/>
+     <path id="NirmalaUI-48" d="M 781 4013 
+Q 644 4013 547 4106 
+Q 450 4200 450 4344 
+Q 450 4488 547 4583 
+Q 644 4678 781 4678 
+Q 922 4678 1020 4583 
+Q 1119 4488 1119 4344 
+Q 1119 4206 1020 4109 
+Q 922 4013 781 4013 
+z
+M 1031 0 
+L 519 0 
+L 519 3200 
+L 1031 3200 
+L 1031 0 
+z
+" transform="scale(0.015625)"/>
+     <path id="NirmalaUI-4c" d="M 5063 0 
+L 4550 0 
+L 4550 1838 
+Q 4550 2369 4386 2606 
+Q 4222 2844 3834 2844 
+Q 3506 2844 3276 2544 
+Q 3047 2244 3047 1825 
+L 3047 0 
+L 2534 0 
+L 2534 1900 
+Q 2534 2844 1806 2844 
+Q 1469 2844 1250 2561 
+Q 1031 2278 1031 1825 
+L 1031 0 
+L 519 0 
+L 519 3200 
+L 1031 3200 
+L 1031 2694 
+L 1044 2694 
+Q 1384 3275 2038 3275 
+Q 2366 3275 2609 3092 
+Q 2853 2909 2944 2613 
+Q 3300 3275 4006 3275 
+Q 5063 3275 5063 1972 
+L 5063 0 
+z
+" transform="scale(0.015625)"/>
+     <path id="NirmalaUI-54" d="M 3106 0 
+L 2594 0 
+L 2594 506 
+L 2581 506 
+Q 2263 -75 1594 -75 
+Q 450 -75 450 1288 
+L 450 3200 
+L 959 3200 
+L 959 1369 
+Q 959 356 1734 356 
+Q 2109 356 2351 632 
+Q 2594 909 2594 1356 
+L 2594 3200 
+L 3106 3200 
+L 3106 0 
+z
+" transform="scale(0.015625)"/>
+     <path id="NirmalaUI-4b" d="M 1031 0 
+L 519 0 
+L 519 4738 
+L 1031 4738 
+L 1031 0 
+z
+" transform="scale(0.015625)"/>
+     <path id="NirmalaUI-4e" d="M 1856 -75 
+Q 1147 -75 723 373 
+Q 300 822 300 1563 
+Q 300 2369 740 2822 
+Q 1181 3275 1931 3275 
+Q 2647 3275 3048 2834 
+Q 3450 2394 3450 1613 
+Q 3450 847 3017 386 
+Q 2584 -75 1856 -75 
+z
+M 1894 2844 
+Q 1400 2844 1112 2508 
+Q 825 2172 825 1581 
+Q 825 1013 1115 684 
+Q 1406 356 1894 356 
+Q 2391 356 2658 678 
+Q 2925 1000 2925 1594 
+Q 2925 2194 2658 2519 
+Q 2391 2844 1894 2844 
+z
+" transform="scale(0.015625)"/>
+     <path id="NirmalaUI-45" d="M 2100 4288 
+Q 1950 4372 1759 4372 
+Q 1222 4372 1222 3694 
+L 1222 3200 
+L 1972 3200 
+L 1972 2763 
+L 1222 2763 
+L 1222 0 
+L 713 0 
+L 713 2763 
+L 166 2763 
+L 166 3200 
+L 713 3200 
+L 713 3719 
+Q 713 4222 1003 4514 
+Q 1294 4806 1728 4806 
+Q 1963 4806 2100 4750 
+L 2100 4288 
+z
+" transform="scale(0.015625)"/>
+     <path id="NirmalaUI-4f" d="M 1044 463 
+L 1031 463 
+L 1031 -1472 
+L 519 -1472 
+L 519 3200 
+L 1031 3200 
+L 1031 2638 
+L 1044 2638 
+Q 1422 3275 2150 3275 
+Q 2769 3275 3116 2845 
+Q 3463 2416 3463 1694 
+Q 3463 891 3072 408 
+Q 2681 -75 2003 -75 
+Q 1381 -75 1044 463 
+z
+M 1031 1753 
+L 1031 1306 
+Q 1031 909 1289 632 
+Q 1547 356 1944 356 
+Q 2409 356 2673 712 
+Q 2938 1069 2938 1703 
+Q 2938 2238 2691 2541 
+Q 2444 2844 2022 2844 
+Q 1575 2844 1303 2533 
+Q 1031 2222 1031 1753 
+z
+" transform="scale(0.015625)"/>
+     <path id="NirmalaUI-58" d="M 3066 3200 
+L 1594 -513 
+Q 1200 -1506 488 -1506 
+Q 288 -1506 153 -1466 
+L 153 -1006 
+Q 319 -1063 456 -1063 
+Q 844 -1063 1038 -600 
+L 1294 6 
+L 44 3200 
+L 613 3200 
+L 1478 738 
+Q 1494 691 1544 494 
+L 1563 494 
+Q 1578 569 1625 731 
+L 2534 3200 
+L 3066 3200 
+z
+" transform="scale(0.015625)"/>
+    </defs>
+    <use xlink:href="#NirmalaUI-16e"/>
+    <use xlink:href="#NirmalaUI-111" transform="translate(60.203125 0)"/>
+    <use xlink:href="#NirmalaUI-12d" transform="translate(127.53125 0)"/>
+    <use xlink:href="#NirmalaUI-106" transform="translate(153.515625 0)"/>
+    <use xlink:href="#NirmalaUI-3" transform="translate(227.640625 0)"/>
+    <use xlink:href="#NirmalaUI-3" transform="translate(255.03125 0)"/>
+    <use xlink:href="#NirmalaUI-3" transform="translate(282.421875 0)"/>
+    <use xlink:href="#NirmalaUI-9f" transform="translate(309.8125 0)"/>
+    <use xlink:href="#NirmalaUI-3" transform="translate(331.5 0)"/>
+    <use xlink:href="#NirmalaUI-3" transform="translate(358.890625 0)"/>
+    <use xlink:href="#NirmalaUI-3" transform="translate(386.28125 0)"/>
+    <use xlink:href="#NirmalaUI-41" transform="translate(413.671875 0)"/>
+    <use xlink:href="#NirmalaUI-51" transform="translate(472.46875 0)"/>
+    <use xlink:href="#NirmalaUI-44" transform="translate(505.921875 0)"/>
+    <use xlink:href="#NirmalaUI-40" transform="translate(558.21875 0)"/>
+    <use xlink:href="#NirmalaUI-42" transform="translate(609.09375 0)"/>
+    <use xlink:href="#NirmalaUI-47" transform="translate(655.28125 0)"/>
+    <use xlink:href="#NirmalaUI-3" transform="translate(711.875 0)"/>
+    <use xlink:href="#NirmalaUI-40" transform="translate(739.265625 0)"/>
+    <use xlink:href="#NirmalaUI-4d" transform="translate(790.140625 0)"/>
+    <use xlink:href="#NirmalaUI-43" transform="translate(846.734375 0)"/>
+    <use xlink:href="#NirmalaUI-3" transform="translate(905.625 0)"/>
+    <use xlink:href="#NirmalaUI-40" transform="translate(933.015625 0)"/>
+    <use xlink:href="#NirmalaUI-53" transform="translate(983.890625 0)"/>
+    <use xlink:href="#NirmalaUI-53" transform="translate(1017.78125 0)"/>
+    <use xlink:href="#NirmalaUI-40" transform="translate(1051.671875 0)"/>
+    <use xlink:href="#NirmalaUI-42" transform="translate(1102.546875 0)"/>
+    <use xlink:href="#NirmalaUI-4a" transform="translate(1148.734375 0)"/>
+    <use xlink:href="#NirmalaUI-3" transform="translate(1198.4375 0)"/>
+    <use xlink:href="#NirmalaUI-52" transform="translate(1225.828125 0)"/>
+    <use xlink:href="#NirmalaUI-48" transform="translate(1268.265625 0)"/>
+    <use xlink:href="#NirmalaUI-4c" transform="translate(1292.484375 0)"/>
+    <use xlink:href="#NirmalaUI-54" transform="translate(1378.625 0)"/>
+    <use xlink:href="#NirmalaUI-4b" transform="translate(1435.21875 0)"/>
+    <use xlink:href="#NirmalaUI-40" transform="translate(1459.4375 0)"/>
+    <use xlink:href="#NirmalaUI-53" transform="translate(1510.3125 0)"/>
+    <use xlink:href="#NirmalaUI-48" transform="translate(1544.203125 0)"/>
+    <use xlink:href="#NirmalaUI-4e" transform="translate(1568.421875 0)"/>
+    <use xlink:href="#NirmalaUI-4d" transform="translate(1627.015625 0)"/>
+    <use xlink:href="#NirmalaUI-3" transform="translate(1683.609375 0)"/>
+    <use xlink:href="#NirmalaUI-45" transform="translate(1711 0)"/>
+    <use xlink:href="#NirmalaUI-4e" transform="translate(1742.296875 0)"/>
+    <use xlink:href="#NirmalaUI-51" transform="translate(1800.890625 0)"/>
+    <use xlink:href="#NirmalaUI-3" transform="translate(1835.65625 0)"/>
+    <use xlink:href="#NirmalaUI-4f" transform="translate(1863.046875 0)"/>
+    <use xlink:href="#NirmalaUI-40" transform="translate(1920.53125 0)"/>
+    <use xlink:href="#NirmalaUI-58" transform="translate(1971.40625 0)"/>
+    <use xlink:href="#NirmalaUI-4c" transform="translate(2019.796875 0)"/>
+    <use xlink:href="#NirmalaUI-44" transform="translate(2105.9375 0)"/>
+    <use xlink:href="#NirmalaUI-4d" transform="translate(2158.234375 0)"/>
+    <use xlink:href="#NirmalaUI-53" transform="translate(2214.828125 0)"/>
+    <use xlink:href="#NirmalaUI-3" transform="translate(2248.71875 0)"/>
+    <use xlink:href="#NirmalaUI-4c" transform="translate(2276.109375 0)"/>
+    <use xlink:href="#NirmalaUI-40" transform="translate(2362.25 0)"/>
+    <use xlink:href="#NirmalaUI-4d" transform="translate(2413.125 0)"/>
+    <use xlink:href="#NirmalaUI-43" transform="translate(2469.71875 0)"/>
+    <use xlink:href="#NirmalaUI-40" transform="translate(2528.609375 0)"/>
+    <use xlink:href="#NirmalaUI-53" transform="translate(2579.484375 0)"/>
+    <use xlink:href="#NirmalaUI-44" transform="translate(2612.59375 0)"/>
+    <use xlink:href="#NirmalaUI-52" transform="translate(2664.890625 0)"/>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p0622e73741">
+   <rect x="7.2" y="25.68195" width="100.8" height="34.016099"/>
+  </clipPath>
+ </defs>
+</svg>
